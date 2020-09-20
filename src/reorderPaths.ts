@@ -420,7 +420,7 @@ const convertPathCommandsToAbsolute = (
 						ellipticalArcArguments.push(
 							ellipticalArcArgument
 								.slice(0, 5)
-								.concat([x, y]) as elliptical_arc_argument,
+								.concat([[x, y]]) as elliptical_arc_argument,
 						);
 					}
 					abspath.push([command, ellipticalArcArguments]);
@@ -476,16 +476,16 @@ const computePathCentroid = (parsedPath: SvgPathTree): [Decimal, Decimal] => {
 			case 'H':
 				for (const xCoord of args as coordinate_sequence) {
 					x = xCoord;
-					Sx.plus(x);
-					Sx.plus(y);
+					Sx = Sx.plus(x);
+					Sy = Sy.plus(y);
 					count++;
 				}
 				break;
 			case 'V':
 				for (const yCoord of args as coordinate_sequence) {
 					y = yCoord;
-					Sx.plus(x);
-					Sx.plus(y);
+					Sx = Sx.plus(x);
+					Sy = Sy.plus(y);
 					count++;
 				}
 				break;
@@ -493,8 +493,8 @@ const computePathCentroid = (parsedPath: SvgPathTree): [Decimal, Decimal] => {
 				for (const curvetoCoordinate of args as curveto_coordinate_sequence) {
 					x = curvetoCoordinate[2][0];
 					y = curvetoCoordinate[2][1];
-					Sx.plus(x);
-					Sx.plus(y);
+					Sx = Sx.plus(x);
+					Sy = Sy.plus(y);
 					count++;
 				}
 				break;
@@ -502,8 +502,8 @@ const computePathCentroid = (parsedPath: SvgPathTree): [Decimal, Decimal] => {
 				for (const smoothCurvetoCoordinate of args as smooth_curveto_coordinate_sequence) {
 					x = smoothCurvetoCoordinate[1][0];
 					y = smoothCurvetoCoordinate[1][1];
-					Sx.plus(x);
-					Sx.plus(y);
+					Sx = Sx.plus(x);
+					Sy = Sy.plus(y);
 					count++;
 				}
 				break;
@@ -511,8 +511,8 @@ const computePathCentroid = (parsedPath: SvgPathTree): [Decimal, Decimal] => {
 				for (const quadraticBezierCurvetoCoordinate of args as quadratic_bezier_curveto_coordinate_sequence) {
 					x = quadraticBezierCurvetoCoordinate[1][0];
 					y = quadraticBezierCurvetoCoordinate[1][1];
-					Sx.plus(x);
-					Sx.plus(y);
+					Sx = Sx.plus(x);
+					Sy = Sy.plus(y);
 					count++;
 				}
 				break;
@@ -520,8 +520,8 @@ const computePathCentroid = (parsedPath: SvgPathTree): [Decimal, Decimal] => {
 				for (const ellipticalArcArgument of args as elliptical_arc_argument_sequence) {
 					x = ellipticalArcArgument[5][0];
 					y = ellipticalArcArgument[5][1];
-					Sx.plus(x);
-					Sx.plus(y);
+					Sx = Sx.plus(x);
+					Sy = Sy.plus(y);
 					count++;
 				}
 				break;
