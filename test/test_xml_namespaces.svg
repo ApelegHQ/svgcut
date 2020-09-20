@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<!--
+ Copyright 2020 Ricardo Iván Vieitez Parra
+
+ All rights reserved.
+
+ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+ REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+ INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ PERFORMANCE OF THIS SOFTWARE.
+-->
+
+<svg:svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="urn:test"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg8">
+  <svg:defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.35"
+     inkscape:cx="-54.285714"
+     inkscape:cy="560"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1366"
+     inkscape:window-height="719"
+     inkscape:window-x="0"
+     inkscape:window-y="25"
+     inkscape:window-maximized="1" />
+  <svg:metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </svg:metadata>
+  <svg:g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <svg:path
+       style="fill:#ff0000;fill-opacity:1;stroke-width:0.26458332"
+       d="m 27.214285,25.613094 h 43.845234 v 31.75 H 27.214285 Z"
+       id="rect10" />
+    <svg:path
+       style="fill:#0000ff;fill-opacity:1;stroke-width:0.26458332"
+       d="M 86.934525,59.630951 H 105.07738 V 97.42857 H 86.934525 Z"
+       id="rect21" />
+    <svg:path
+       style="fill:none;stroke:#ff00ff;stroke-width:0.26458332;stroke-opacity:1"
+       inkscape:transform-center-x="-0.87249119"
+       inkscape:transform-center-y="-1.3834838"
+       d="M 40.065477,110.27976 27.314469,101.45788 12.81848,106.9606 17.268303,92.107563 7.5553989,80.021492 23.056548,79.663684 l 8.493084,-12.972322 5.130414,14.6319 14.961919,4.068735 -12.330379,9.40082 z"
+       id="path23" />
+    <svg:path
+       style="fill:#00ff00;fill-opacity:1;stroke-width:0.26458332"
+       d="M 192.0119,61.142857 A 24.190477,24.190477 0 0 1 167.82143,85.333334 24.190477,24.190477 0 0 1 143.63095,61.142857 24.190477,24.190477 0 0 1 167.82143,36.952379 24.190477,24.190477 0 0 1 192.0119,61.142857 Z"
+       id="path25" />
+    <svg:path
+       style="fill:#ffff00;fill-opacity:1;stroke-width:0.26458332"
+       inkscape:transform-center-x="3.4080841"
+       inkscape:transform-center-y="-3.9244101"
+       d="M 111.125,182.09524 87.306204,176.19226 63.487406,170.28929 80.50893,152.6131 97.530453,134.9369 104.32773,158.51607 Z"
+       id="path27" />
+    <svg:path
+       style="fill:none;stroke:#00ffff;stroke-width:0.30070296;stroke-opacity:1"
+       d="M 105.07738,21.833328 H 128.5119 V 59.630947 H 105.07738 Z"
+       id="rect29" />
+    <svg:path
+       id="rect4566"
+       style="fill:none;fill-opacity:1;stroke:#ff7f00;stroke-width:0.26458332;stroke-opacity:1"
+       d="m 142.11906,161.68451 h 27.98282 v 24.65715 h -27.98282 z m -1.51191,-46.86904 c 0.98545,1.40238 -1.4042,2.02026 -2.33086,1.63789 -2.51118,-1.03619 -2.34689,-4.45577 -0.94493,-6.2996 2.50777,-3.29819 7.45021,-2.8729 10.26835,-0.25198 4.13573,3.84631 3.4224,10.48815 -0.44098,14.23711 -5.14928,4.99677 -13.54188,3.98238 -18.20585,-1.13395 -5.86914,-6.43837 -4.5479,-16.60324 1.8269,-22.1746 7.72073,-6.747659 19.66892,-5.116609 26.14335,2.51986 7.62989,8.99932 5.68735,22.73729 -3.21282,30.1121 -10.27561,8.51452 -25.80745,6.25944 -34.08085,-3.90578 -9.40076,-11.55037 -6.83248,-28.87888 4.59874,-38.049595 12.82409,-10.288163 31.95122,-7.406189 42.01834,5.291698 11.17642,14.097057 7.98042,35.024257 -5.98465,45.987097" />
+  </svg:g>
+  <svg:circle />
+  <svg:g>
+  </svg:g>
+  <svg:g><svg:line x="1"/></svg:g>
+</svg:svg>
