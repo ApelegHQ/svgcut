@@ -756,7 +756,7 @@ const reconstructPathFromParsedPath = (parsedPath: SvgPathTree): string => {
 					return `${command}${(args as elliptical_arc_argument_sequence)
 						.flat()
 						.flat()
-						.map(Number)
+						.map((v) => Object(v) instanceof Boolean ? +v : v)
 						.join(' ')}`;
 			}
 		})
