@@ -615,7 +615,7 @@ const reconstructSvgDocuments = (documents: SvgDocument[]): string[] => {
 			document.properties.viewBox
 				? `viewBox="${document.properties.viewBox.minX} ${document.properties.viewBox.minY} ${document.properties.viewBox.width} ${document.properties.viewBox.height}"`
 				: ''
-		}><style type="text/css">path{fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;}</style><g>${
+		} xmlns="http://www.w3.org/2000/svg"><style type="text/css">path{fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;}</style><g>${
 			document.paths.length
 				? document.paths.map((path) => `<path d="${path}" />`).join('')
 				: ''
