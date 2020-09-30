@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!--
  Copyright 2020 Ricardo Iván Vieitez Parra
 
@@ -11,9 +12,21 @@
  OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  PERFORMANCE OF THIS SOFTWARE.
 -->
-<svg version="1.1" xmlns="http://www.w3.org/2000/svg">
-	<path d="M 100.6.5-1 1e-1"/>
-	<path d=""/>
-	<path d="none"/>
-	<path d="M 1 1 M 0 0 1"/>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="3" height="3" viewBox="-1.5 -1.5 3 3">
+  <style>
+  path {
+    fill:none;
+    stroke:#000000;
+    stroke-width:0.01;
+    stroke-linecap:butt;
+    stroke-linejoin:miter;
+    stroke-opacity:1;
+  }
+  </style>
+
+  <path d="M 0 0 l 1 0 m -1 0 l 0 1 m -1 -1 a 1 1 0 0 0 2 0" />
+
+  <g transform="matrix(0.866025, -0.5, 0.683013, 0.183013, 0, 0)">
+    <path d="M 0 0 l 1 0 m -1 0 l 0 1 m -1 -1 a 1 1 0 0 0 2 0" />
+  </g>
 </svg>

@@ -11,17 +11,17 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-import { Strategy } from './SvgPathReorderUtils';
-import { SvgDocument } from './SvgDocument';
+declare module '@generated/svgtransform' {
+	import { Decimal } from 'decimal.js';
 
-export { Strategy };
+	export type SvgTransformMatrix = [
+		Decimal,
+		Decimal,
+		Decimal,
+		Decimal,
+		Decimal,
+		Decimal,
+	];
 
-export const reorderSvgPaths = async (
-	input: Buffer | string,
-	strategy: Strategy,
-): Promise<string[]> => {
-	return (await SvgDocument.fromString(input)).map((document) => {
-		document.reorderPaths(strategy);
-		return document.toString();
-	});
-};
+	export function parse(input: string): SvgTransformMatrix[];
+}

@@ -20,6 +20,12 @@ module.exports = (grunt) => {
 						'./src/svgpath.jison',
 				},
 			},
+			svgtransform: {
+				files: {
+					'node_modules/@generated/svgtransform/index.js':
+						'./src/svgtransform.jison',
+				},
+			},
 		},
 		browserify: {
 			dist: {

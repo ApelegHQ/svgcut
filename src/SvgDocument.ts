@@ -13,26 +13,46 @@
 
 import { Decimal } from 'decimal.js';
 import { Parser } from 'xml2js';
-import { Strategy, reorderPaths } from './reorderPaths';
 
-Decimal.set({ toExpPos: 9e15, toExpNeg: -9e15 });
+import { SvgPath } from './SvgPath';
+import { Strategy, sortPathsByRelativePosition } from './SvgPathReorderUtils';
+import { SvgTransform } from './SvgTransform';
 
-interface viewBox {
+type XmlTree = {
+	$?: {
+		[attr: string]: {
+			name: string;
+			value: string;
+			prefix: string;
+			local: string;
+			uri: string;
+		};
+	};
+	$ns: {
+		uri: string;
+		local: string;
+	};
+	$$?: XmlTree[];
+};
+
+type SvgViewBox = {
 	minX: Decimal;
 	minY: Decimal;
 	width: Decimal;
 	height: Decimal;
-}
+};
 
-interface SvgDocument {
+type SvgDocumentStructure = {
 	properties: {
 		width: Decimal;
 		height: Decimal;
-		viewBox?: viewBox;
+		viewBox?: SvgViewBox;
 		version: string;
 	};
-	paths: string[];
-}
+	paths: SvgPath[];
+};
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
 const parseLength = (value: string, baseLength: Decimal) => {
 	const match = value.match(
@@ -85,28 +105,34 @@ const parseLength = (value: string, baseLength: Decimal) => {
 	}
 };
 
-const extractSvgDocumentPaths = async (
-	data: Buffer | string,
-): Promise<SvgDocument[]> => {
-	const parser = new Parser({
-		xmlns: true,
-		preserveChildrenOrder: true,
-		explicitChildren: true,
-	});
+export class SvgDocument {
+	private structure: SvgDocumentStructure;
 
-	const result = await parser.parseStringPromise(data);
+	private constructor(structure: SvgDocumentStructure) {
+		this.structure = structure;
+	}
 
-	const documents: SvgDocument[] = [];
+	static async fromString(data: Buffer | string): Promise<SvgDocument[]> {
+		const parser = new Parser({
+			xmlns: true,
+			preserveChildrenOrder: true,
+			explicitChildren: true,
+			explicitRoot: false,
+		});
 
-	const zero = new Decimal(0);
+		const result = await parser.parseStringPromise(data);
 
-	// eslint-disable-next-line @typescript-eslint/ban-types
-	const extractPaths = (tree: object, document: SvgDocument | null) => {
-		for (const el of Object.values(tree)) {
-			if (el['$ns']['uri'] === 'http://www.w3.org/2000/svg') {
+		const documents: SvgDocumentStructure[] = [];
+
+		const extractPaths = (
+			el: XmlTree,
+			document: SvgDocumentStructure | undefined = undefined,
+			currentTransform: SvgTransform | undefined = undefined,
+		) => {
+			if (el['$ns']['uri'] === SVG_NS) {
 				if (el['$ns']['local'] === 'svg') {
 					if (document) {
-						throw new Error('Invalid nested document');
+						throw new Error('Unsupported nested document');
 					}
 
 					document = {
@@ -119,15 +145,13 @@ const extractSvgDocumentPaths = async (
 					};
 					documents.push(document);
 
-					for (const attr of Object.values(el['$'])) {
+					for (const attr of Object.values(el['$'] ?? {})) {
 						if (
 							attr instanceof Object &&
 							'uri' in attr &&
 							'local' in attr &&
 							'value' in attr &&
-							['http://www.w3.org/2000/svg', ''].includes(
-								attr['uri'],
-							)
+							[SVG_NS, ''].includes(attr['uri'])
 						) {
 							switch (attr['local']) {
 								case 'width':
@@ -135,14 +159,14 @@ const extractSvgDocumentPaths = async (
 										parseLength(
 											attr['value'],
 											document.properties.width,
-										) || document.properties.width;
+										) ?? document.properties.width;
 									break;
 								case 'height':
 									document.properties.height =
 										parseLength(
 											attr['value'],
 											document.properties.height,
-										) || document.properties.height;
+										) ?? document.properties.height;
 									break;
 								case 'viewBox':
 									{
@@ -164,17 +188,23 @@ const extractSvgDocumentPaths = async (
 								case 'version':
 									document.properties.version = attr['value'];
 									break;
+								case 'transform':
+									currentTransform = SvgTransform.fromString(
+										attr['value'],
+										currentTransform,
+									);
+									break;
 							}
 						}
 					}
-				} else if (document === null) {
-					continue;
+				} else if (document === undefined) {
+					return;
 				} else {
 					const baseLengthX =
-						document.properties.viewBox?.width ||
+						document.properties.viewBox?.width ??
 						document.properties.width;
 					const baseLengthY =
-						document.properties.viewBox?.height ||
+						document.properties.viewBox?.height ??
 						document.properties.height;
 					const baseLength = baseLengthX
 						.pow(2)
@@ -183,23 +213,39 @@ const extractSvgDocumentPaths = async (
 						.sqrt();
 
 					switch (el['$ns']['local']) {
+						case 'g':
+							for (const attr of Object.values(el['$'] ?? {})) {
+								if (
+									attr instanceof Object &&
+									'uri' in attr &&
+									'local' in attr &&
+									[SVG_NS, ''].includes(attr['uri'])
+								) {
+									switch (attr['local']) {
+										case 'transform':
+											currentTransform = SvgTransform.fromString(
+												attr['value'],
+												currentTransform,
+											);
+											break;
+									}
+								}
+							}
+							break;
 						case 'circle':
 							{
-								let cx: Decimal = zero,
-									cy: Decimal = zero,
-									r: Decimal = zero;
+								let cx: Decimal | undefined,
+									cy: Decimal | undefined,
+									r: Decimal | undefined;
 
 								for (const attr of Object.values(
-									el['$'] || {},
+									el['$'] ?? {},
 								)) {
 									if (
 										attr instanceof Object &&
 										'uri' in attr &&
 										'local' in attr &&
-										[
-											'http://www.w3.org/2000/svg',
-											'',
-										].includes(attr['uri'])
+										[SVG_NS, ''].includes(attr['uri'])
 									) {
 										switch (attr['local']) {
 											case 'cx':
@@ -207,55 +253,57 @@ const extractSvgDocumentPaths = async (
 													parseLength(
 														attr['value'],
 														baseLengthX,
-													) || cx;
+													) ?? cx;
 												break;
 											case 'cy':
 												cy =
 													parseLength(
 														attr['value'],
 														baseLengthY,
-													) || cy;
+													) ?? cy;
 												break;
 											case 'r':
 												r =
 													parseLength(
 														attr['value'],
 														baseLength,
-													) || r;
+													) ?? r;
+												break;
+											case 'transform':
+												currentTransform = SvgTransform.fromString(
+													attr['value'],
+													currentTransform,
+												);
 												break;
 										}
 									}
 								}
-								if (r.lte(0)) {
-									document.paths.push(`M${cx} ${cy}`);
-								} else {
-									document.paths.push(
-										`M${cx.sub(r)} ${cy}` +
-											`a ${r} ${r} 0 1 1 ${r} ${r}` +
-											`a ${r} ${r} 0 0 1 ${r.neg()} ${r.neg()}` +
-											`Z`,
-									);
-								}
+
+								document.paths.push(
+									SvgPath.fromCircle(
+										cx,
+										cy,
+										r,
+										currentTransform,
+									),
+								);
 							}
-							break;
+							return;
 						case 'ellipse':
 							{
-								let cx: Decimal = zero,
-									cy: Decimal = zero,
-									rx: Decimal | null = null,
-									ry: Decimal | null = null;
+								let cx: Decimal | undefined,
+									cy: Decimal | undefined,
+									rx: Decimal | undefined,
+									ry: Decimal | undefined;
 
 								for (const attr of Object.values(
-									el['$'] || {},
+									el['$'] ?? {},
 								)) {
 									if (
 										attr instanceof Object &&
 										'uri' in attr &&
 										'local' in attr &&
-										[
-											'http://www.w3.org/2000/svg',
-											'',
-										].includes(attr['uri'])
+										[SVG_NS, ''].includes(attr['uri'])
 									) {
 										switch (attr['local']) {
 											case 'cx':
@@ -263,14 +311,14 @@ const extractSvgDocumentPaths = async (
 													parseLength(
 														attr['value'],
 														baseLengthX,
-													) || cx;
+													) ?? cx;
 												break;
 											case 'cy':
 												cy =
 													parseLength(
 														attr['value'],
 														baseLengthY,
-													) || cy;
+													) ?? cy;
 												break;
 											case 'rx':
 												if (attr['value'] !== 'auto') {
@@ -278,7 +326,7 @@ const extractSvgDocumentPaths = async (
 														parseLength(
 															attr['value'],
 															baseLengthX,
-														) || rx;
+														) ?? rx;
 												}
 												break;
 											case 'ry':
@@ -287,53 +335,45 @@ const extractSvgDocumentPaths = async (
 														parseLength(
 															attr['value'],
 															baseLengthY,
-														) || ry;
+														) ?? ry;
 												}
+												break;
+											case 'transform':
+												currentTransform = SvgTransform.fromString(
+													attr['value'],
+													currentTransform,
+												);
 												break;
 										}
 									}
 								}
 
-								if (rx === null && ry !== null) {
-									rx = ry;
-								} else if (rx !== null && ry === null) {
-									ry = rx;
-								} else if (rx === null && ry === null) {
-									rx = ry = zero;
-								}
-
-								if (rx !== null && ry !== null) {
-									if (rx.lte(0) || ry.lte(0)) {
-										document.paths.push(`M${cx} ${cy}`);
-									} else {
-										document.paths.push(
-											`M${cx.sub(rx)} ${cy}` +
-												`a ${rx} ${ry} 0 1 1 ${rx} ${ry}` +
-												`a ${rx} ${ry} 0 0 1 ${rx.neg()} ${ry.neg()}` +
-												`Z`,
-										);
-									}
-								}
+								document.paths.push(
+									SvgPath.fromEllipse(
+										cx,
+										cy,
+										rx,
+										ry,
+										currentTransform,
+									),
+								);
 							}
-							break;
+							return;
 						case 'line':
 							{
-								let x1: Decimal = zero,
-									x2: Decimal = zero,
-									y1: Decimal = zero,
-									y2: Decimal = zero;
+								let x1: Decimal | undefined,
+									x2: Decimal | undefined,
+									y1: Decimal | undefined,
+									y2: Decimal | undefined;
 
 								for (const attr of Object.values(
-									el['$'] || {},
+									el['$'] ?? {},
 								)) {
 									if (
 										attr instanceof Object &&
 										'uri' in attr &&
 										'local' in attr &&
-										[
-											'http://www.w3.org/2000/svg',
-											'',
-										].includes(attr['uri'])
+										[SVG_NS, ''].includes(attr['uri'])
 									) {
 										switch (attr['local']) {
 											case 'x1':
@@ -341,124 +381,169 @@ const extractSvgDocumentPaths = async (
 													parseLength(
 														attr['value'],
 														baseLengthX,
-													) || x1;
+													) ?? x1;
 												break;
 											case 'x2':
 												x2 =
 													parseLength(
 														attr['value'],
 														baseLengthX,
-													) || x2;
+													) ?? x2;
 												break;
 											case 'y1':
 												y1 =
 													parseLength(
 														attr['value'],
 														baseLengthY,
-													) || y1;
+													) ?? y1;
 												break;
 											case 'y2':
 												y2 =
 													parseLength(
 														attr['value'],
 														baseLengthY,
-													) || y2;
+													) ?? y2;
+												break;
+											case 'transform':
+												currentTransform = SvgTransform.fromString(
+													attr['value'],
+													currentTransform,
+												);
 												break;
 										}
 									}
 								}
-								document.paths.push(`M${x1} ${y1} ${x2} ${y2}`);
+
+								document.paths.push(
+									SvgPath.fromLine(
+										x1,
+										y1,
+										x1,
+										y2,
+										currentTransform,
+									),
+								);
 							}
-							break;
+							return;
 						case 'path':
 							{
-								let d = '';
-								for (const attr of Object.values(
-									el['$'] || {},
-								)) {
-									if (
-										attr instanceof Object &&
-										'uri' in attr &&
-										'local' in attr &&
-										[
-											'http://www.w3.org/2000/svg',
-											'',
-										].includes(attr['uri']) &&
-										attr['local'] === 'd'
-									) {
-										d = attr['value'] || '';
-										break;
-									}
-								}
-								document.paths.push(d);
-							}
-							break;
-						case 'polygon':
-							{
-								let points = '';
-								for (const attr of Object.values(
-									el['$'] || {},
-								)) {
-									if (
-										attr instanceof Object &&
-										'uri' in attr &&
-										'local' in attr &&
-										[
-											'http://www.w3.org/2000/svg',
-											'',
-										].includes(attr['uri']) &&
-										attr['local'] === 'points'
-									) {
-										points = attr['value'] || points;
-										break;
-									}
-								}
-								document.paths.push(`M${points}Z`);
-							}
-							break;
-						case 'polyline':
-							{
-								let points = '';
-								for (const attr of Object.values(
-									el['$'] || {},
-								)) {
-									if (
-										attr instanceof Object &&
-										'uri' in attr &&
-										'local' in attr &&
-										[
-											'http://www.w3.org/2000/svg',
-											'',
-										].includes(attr['uri']) &&
-										attr['local'] === 'points'
-									) {
-										points = attr['value'] || points;
-										break;
-									}
-								}
-								document.paths.push(`M${points}`);
-							}
-							break;
-						case 'rect':
-							{
-								let x: Decimal = zero,
-									y: Decimal = x,
-									rx: Decimal | null = null,
-									ry: Decimal | null = null,
-									width: Decimal = x,
-									height: Decimal = zero;
+								let d: string | undefined;
 
 								for (const attr of Object.values(
-									el['$'] || {},
+									el['$'] ?? {},
 								)) {
 									if (
 										attr instanceof Object &&
 										'uri' in attr &&
 										'local' in attr &&
-										[
-											'http://www.w3.org/2000/svg',
-											'',
-										].includes(attr['uri'])
+										[SVG_NS, ''].includes(attr['uri'])
+									) {
+										if (attr['local'] === 'd') {
+											d = attr['value'] ?? d;
+										} else if (
+											attr['local'] === 'transform'
+										) {
+											currentTransform = SvgTransform.fromString(
+												attr['value'],
+												currentTransform,
+											);
+										}
+									}
+								}
+
+								document.paths.push(
+									...SvgPath.fromString(
+										d,
+										currentTransform,
+									).extractSubpaths(),
+								);
+							}
+							return;
+						case 'polygon':
+							{
+								let points: string | undefined;
+
+								for (const attr of Object.values(
+									el['$'] ?? {},
+								)) {
+									if (
+										attr instanceof Object &&
+										'uri' in attr &&
+										'local' in attr &&
+										[SVG_NS, ''].includes(attr['uri'])
+									) {
+										if (attr['local'] === 'points') {
+											points = attr['value'] ?? points;
+										} else if (
+											attr['local'] === 'transform'
+										) {
+											currentTransform = SvgTransform.fromString(
+												attr['value'],
+												currentTransform,
+											);
+										}
+									}
+								}
+
+								document.paths.push(
+									SvgPath.fromPolygon(
+										points,
+										currentTransform,
+									),
+								);
+							}
+							return;
+						case 'polyline':
+							{
+								let points: string | undefined;
+
+								for (const attr of Object.values(
+									el['$'] ?? {},
+								)) {
+									if (
+										attr instanceof Object &&
+										'uri' in attr &&
+										'local' in attr &&
+										[SVG_NS, ''].includes(attr['uri'])
+									) {
+										if (attr['local'] === 'points') {
+											points = attr['value'] ?? points;
+										} else if (
+											attr['local'] === 'transform'
+										) {
+											currentTransform = SvgTransform.fromString(
+												attr['value'],
+												currentTransform,
+											);
+										}
+									}
+								}
+
+								document.paths.push(
+									SvgPath.fromPolyline(
+										points,
+										currentTransform,
+									),
+								);
+							}
+							return;
+						case 'rect':
+							{
+								let x: Decimal | undefined,
+									y: Decimal | undefined,
+									rx: Decimal | undefined,
+									ry: Decimal | undefined,
+									width: Decimal | undefined,
+									height: Decimal | undefined;
+
+								for (const attr of Object.values(
+									el['$'] ?? {},
+								)) {
+									if (
+										attr instanceof Object &&
+										'uri' in attr &&
+										'local' in attr &&
+										[SVG_NS, ''].includes(attr['uri'])
 									) {
 										switch (attr['local']) {
 											case 'x':
@@ -466,14 +551,14 @@ const extractSvgDocumentPaths = async (
 													parseLength(
 														attr['value'],
 														baseLengthX,
-													) || x;
+													) ?? x;
 												break;
 											case 'y':
 												y =
 													parseLength(
 														attr['value'],
 														baseLengthY,
-													) || y;
+													) ?? y;
 												break;
 											case 'rx':
 												if (attr['value'] !== 'auto') {
@@ -481,7 +566,7 @@ const extractSvgDocumentPaths = async (
 														parseLength(
 															attr['value'],
 															baseLengthX,
-														) || rx;
+														) ?? rx;
 												}
 												break;
 											case 'ry':
@@ -490,7 +575,7 @@ const extractSvgDocumentPaths = async (
 														parseLength(
 															attr['value'],
 															baseLengthY,
-														) || ry;
+														) ?? ry;
 												}
 												break;
 											case 'width':
@@ -498,151 +583,80 @@ const extractSvgDocumentPaths = async (
 													parseLength(
 														attr['value'],
 														baseLengthX,
-													) || width;
+													) ?? width;
 												break;
 											case 'height':
 												height =
 													parseLength(
 														attr['value'],
 														baseLengthY,
-													) || height;
+													) ?? height;
+												break;
+											case 'transform':
+												currentTransform = SvgTransform.fromString(
+													attr['value'],
+													currentTransform,
+												);
 												break;
 										}
 									}
 								}
 
-								if (rx === null && ry !== null) {
-									rx = ry;
-								} else if (rx !== null && ry === null) {
-									ry = rx;
-								} else if (rx === null && ry === null) {
-									rx = ry = zero;
-								}
-
-								if (width.lte(0) || height.lte(0)) {
-									document.paths.push(`M ${x} ${y}`);
-								} else if (
-									rx === null ||
-									ry === null ||
-									rx.lte(0) ||
-									ry.lte(0)
-								) {
-									document.paths.push(
-										`M ${x} ${y}` +
-											`h ${width}` +
-											`v ${height}` +
-											`h ${width.neg()}` +
-											`v ${height.neg()}` +
-											`Z`,
-									);
-								} else if (
-									rx.lte(width.div(2)) &&
-									ry.lte(height.div(2))
-								) {
-									document.paths.push(
-										`M ${x.plus(rx)} ${y}` +
-											`h ${width.sub(rx.mul(2))}` +
-											`a ${rx} ${ry} 0 0 1 ${rx} ${ry}` +
-											`v ${height.sub(ry.mul(2))}` +
-											`a ${rx} ${ry} 0 0 1 ${rx.neg()} ${ry}` +
-											`h ${rx.mul(2).sub(width)}` +
-											`a ${rx} ${ry} 0 0 1 ${rx.neg()} ${ry.neg()}` +
-											`v ${ry.mul(2).sub(height)}` +
-											`a ${rx} ${ry} 0 0 1 ${rx} ${ry.neg()}` +
-											`Z`,
-									);
-								} else if (rx.lte(width.div(2))) {
-									document.paths.push(
-										`M ${x.plus(rx)} ${y}` +
-											`h ${width.sub(rx.mul(2))}` +
-											`a ${rx} ${height.div(
-												2,
-											)} 0 1 1 0 ${height}` +
-											`h ${rx.mul(2).sub(width)}` +
-											`a ${rx} ${height.div(
-												2,
-											)} 0 1 1 0 ${height.neg()}` +
-											`Z`,
-									);
-								} else if (ry.lte(height.div(2))) {
-									document.paths.push(
-										`M ${x.plus(width)} ${y.plus(ry)}` +
-											`v ${height.sub(ry.mul(2))}` +
-											`a ${width.div(
-												2,
-											)} ${ry} 0 0 1 ${-width} 0` +
-											`v ${ry.mul(2).sub(height)}` +
-											`a ${width.div(
-												2,
-											)} ${ry} 0 0 1 ${width} 0` +
-											`Z`,
-									);
-								} else {
-									document.paths.push(
-										`M ${x.plus(width)} ${y.plus(
-											height.div(2),
-										)}` +
-											`a ${width.div(2)} ${height.div(
-												2,
-											)} 0 0 1 ${width.neg()} 0` +
-											`a ${width.div(2)} ${height.div(
-												2,
-											)} 0 0 1 ${width} 0` +
-											`Z`,
-									);
-								}
+								document.paths.push(
+									SvgPath.fromRect(
+										x,
+										y,
+										width,
+										height,
+										rx,
+										ry,
+										currentTransform,
+									),
+								);
 							}
-							break;
+							return;
 					}
 				}
 			}
-			if (el['$$'] && Array.isArray(el['$$']) && el['$$'].length) {
-				extractPaths(el['$$'], document);
+			if (Array.isArray(el['$$'])) {
+				el['$$'].forEach((node) =>
+					extractPaths(node, document, currentTransform),
+				);
 			}
-		}
-	};
+		};
 
-	extractPaths(result, null);
+		extractPaths(result);
 
-	return documents;
-};
+		return documents.map((document) => new SvgDocument(document));
+	}
 
-const reconstructSvgDocuments = (documents: SvgDocument[]): string[] => {
-	return documents.map((document) => {
-		return `<svg width="${document.properties.width}" height="${
-			document.properties.height
-		}" version="${document.properties.version}" ${
-			document.properties.viewBox
-				? `viewBox="${document.properties.viewBox.minX} ${document.properties.viewBox.minY} ${document.properties.viewBox.width} ${document.properties.viewBox.height}"`
+	toString(): string {
+		return `<svg width="${this.structure.properties.width}" height="${
+			this.structure.properties.height
+		}" version="${this.structure.properties.version}" ${
+			this.structure.properties.viewBox
+				? `viewBox="${this.structure.properties.viewBox.minX} ${this.structure.properties.viewBox.minY} ${this.structure.properties.viewBox.width} ${this.structure.properties.viewBox.height}"`
 				: ''
-		} xmlns="http://www.w3.org/2000/svg"><style type="text/css">path{fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;}</style><g>${
-			document.paths.length
-				? document.paths.map((path) => `<path d="${path}" />`).join('')
+		} xmlns="${SVG_NS}"><style type="text/css">path{fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;}</style><g>${
+			this.structure.paths.length
+				? this.structure.paths
+						.map((path) => `<path d="${path}" />`)
+						.join('')
 				: ''
 		}</g></svg>`;
-	});
-};
+	}
 
-export const reorderSvgPaths = async (
-	input: Buffer | string,
-	strategy: Strategy,
-): Promise<string[]> => {
-	const documents = await extractSvgDocumentPaths(input);
-
-	const reorderedDocuments = documents.map((document) => {
-		const reorderedPaths = reorderPaths(
-			document.paths,
+	reorderPaths(strategy: Strategy): void {
+		const reorderedPaths = sortPathsByRelativePosition(
+			this.structure.paths,
 			strategy,
-			document.properties.viewBox
+			this.structure.properties.viewBox
 				? [
-						document.properties.viewBox.minX,
-						document.properties.viewBox.minY,
+						this.structure.properties.viewBox.minX,
+						this.structure.properties.viewBox.minY,
 				  ]
 				: undefined,
 		);
-		document.paths = reorderedPaths;
-		return document;
-	});
-
-	return reconstructSvgDocuments(reorderedDocuments);
-};
+		this.structure.paths = reorderedPaths;
+	}
+}
