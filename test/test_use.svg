@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+ Copyright 2020 Ricardo Iván Vieitez Parra
+
+ All rights reserved.
+
+ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+ REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+ INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ PERFORMANCE OF THIS SOFTWARE.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="350" height="200" viewBox="0 0 350 200">
+	<defs transform="rotate(25)" id="ignore">
+		<g transform="scale(2 3)" id="u">
+			<rect x="0" y="0" width="25" height="25" id="xx" transform="rotate(45)" stroke="black" />
+			<use xlink:href="#xx" id="x" x="2" y="3" transform="rotate(45)" />
+			<rect x="50" y="50" width="30" height="30" id="y" stroke="cyan" />
+		</g>
+	</defs>
+	<g transform="skewY(-15)">
+		<use href=" #xx " transform="rotate(-30) translate(15 2) rotate(45) translate(2 3)" fill="black" />
+		<use href=" #x " x="15" y="2" transform="rotate(-30)" fill="red" />
+		<use xlink:href="#y" fill="blue" />
+		<g transform="skewY(10)" fill="green" >
+			<use xlink:href="#x" x="25" y="25" transform="skewX(10)" />
+			<use xlink:href="#y" x="25" y="25" />
+			<use xlink:href="#y" x="0" y="-50" />
+		</g>
+
+		<use xlink:href="#u" x="200" y="30" fill="pink" />
+	</g>
+</svg>

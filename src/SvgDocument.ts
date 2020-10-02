@@ -42,22 +42,42 @@ type SvgViewBox = {
 	height: Decimal;
 };
 
+type SvgDocumentProperties = {
+	width: Decimal;
+	height: Decimal;
+	viewBox?: SvgViewBox;
+	version: string;
+};
+
 type SvgDocumentStructure = {
-	properties: {
-		width: Decimal;
-		height: Decimal;
-		viewBox?: SvgViewBox;
-		version: string;
-	};
+	properties: SvgDocumentProperties;
 	paths: SvgPath[];
 };
 
+type SvgParseArgs = {
+	defs: { [id: string]: SvgPath[] };
+	properties: SvgDocumentProperties;
+	render: boolean;
+	CTM?: SvgTransform;
+};
+
+type SvgParseResult = {
+	paths?: SvgPath[];
+};
+
+const zero = new Decimal(0);
+const one = new Decimal(1);
 const SVG_NS = 'http://www.w3.org/2000/svg';
+const XLINK_NS = 'http://www.w3.org/1999/xlink';
+
+// TODO: Support for whole range of characters allowed in the SVG spec
+const hrefRegex = /^\s*#([:A-Z_a-z]*)\s*$/u;
+const idRegex = /^[:A-Z_a-z][-.0-9:A-Z_a-z]*$/u;
+const lengthRegex = /^\s*([+-]?[0-9]+(?:[Ee][+-]?[0-9]+)?|[+-]?[0-9]*[.][0-9]+(?:[Ee][+-]?[0-9]+)?)(em|ex|px|in|cm|mm|pt|pc|%)?\s*$/;
+const viewBoxRegex = /^\s*([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)(?:\s+|\s*,\s*|(?=[+-.]))([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)(?:\s+|\s*,\s*|(?=[+-.]))([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)(?:\s+|\s*,\s*|(?=[+-.]))([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)\s*$/;
 
 const parseLength = (value: string, baseLength: Decimal) => {
-	const match = value.match(
-		/^\s*([+-]?[0-9]+(?:[Ee][+-]?[0-9]+)?|[+-]?[0-9]*[.][0-9]+(?:[Ee][+-]?[0-9]+)?)(em|ex|px|in|cm|mm|pt|pc|%)?\s*$/,
-	);
+	const match = value.match(lengthRegex);
 	if (match) {
 		const length = new Decimal(match[1]);
 		const unit = match[2];
@@ -126,24 +146,15 @@ export class SvgDocument {
 
 		const extractPaths = (
 			el: XmlTree,
-			document: SvgDocumentStructure | undefined = undefined,
-			currentTransform: SvgTransform | undefined = undefined,
-		) => {
+			args: SvgParseArgs | undefined = undefined,
+		): SvgParseResult => {
 			if (el['$ns']['uri'] === SVG_NS) {
-				if (el['$ns']['local'] === 'svg') {
-					if (document) {
-						throw new Error('Unsupported nested document');
-					}
-
-					document = {
-						properties: {
-							width: new Decimal(300),
-							height: new Decimal(150),
-							version: '1.1',
-						},
-						paths: [],
-					};
-					documents.push(document);
+				if (args === undefined && el['$ns']['local'] === 'svg') {
+					let width: Decimal = new Decimal(300),
+						height: Decimal = new Decimal(150),
+						version = '1.1',
+						transform: string | undefined,
+						viewBox: SvgViewBox | undefined;
 
 					for (const attr of Object.values(el['$'] ?? {})) {
 						if (
@@ -155,57 +166,86 @@ export class SvgDocument {
 						) {
 							switch (attr['local']) {
 								case 'width':
-									document.properties.width =
-										parseLength(
-											attr['value'],
-											document.properties.width,
-										) ?? document.properties.width;
+									width =
+										parseLength(attr['value'], width) ??
+										width;
 									break;
 								case 'height':
-									document.properties.height =
-										parseLength(
-											attr['value'],
-											document.properties.height,
-										) ?? document.properties.height;
+									height =
+										parseLength(attr['value'], height) ??
+										height;
 									break;
 								case 'viewBox':
 									{
-										const viewBox = String(
+										const viewBoxValues = String(
 											attr['value'],
-										).match(
-											/^\s*([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)(?:\s+|\s*,\s*|(?=[+-.]))([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)(?:\s+|\s*,\s*|(?=[+-.]))([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)(?:\s+|\s*,\s*|(?=[+-.]))([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)\s*$/,
-										);
-										if (viewBox) {
-											document.properties.viewBox = {
-												minX: new Decimal(viewBox[1]),
-												minY: new Decimal(viewBox[2]),
-												width: new Decimal(viewBox[3]),
-												height: new Decimal(viewBox[4]),
+										).match(viewBoxRegex);
+										if (viewBoxValues) {
+											viewBox = {
+												minX: new Decimal(
+													viewBoxValues[1],
+												),
+												minY: new Decimal(
+													viewBoxValues[2],
+												),
+												width: new Decimal(
+													viewBoxValues[3],
+												),
+												height: new Decimal(
+													viewBoxValues[4],
+												),
 											};
 										}
 									}
 									break;
 								case 'version':
-									document.properties.version = attr['value'];
+									version = attr['value'] ?? version;
 									break;
 								case 'transform':
-									currentTransform = SvgTransform.fromString(
-										attr['value'],
-										currentTransform,
-									);
+									transform = attr['value'] ?? transform;
 									break;
 							}
 						}
 					}
-				} else if (document === undefined) {
-					return;
+
+					const svgTransform: SvgTransform = SvgTransform.fromString(
+						transform,
+					);
+
+					const defs = {};
+					const paths: SvgPath[] = [];
+
+					const args_ = {
+						properties: {
+							height: height,
+							width: width,
+							version: version,
+							viewBox: viewBox,
+						},
+						render: true,
+						CTM: svgTransform,
+						defs: defs,
+					};
+
+					(el['$$'] ?? []).forEach((node) => {
+						const result = extractPaths(node, args_);
+						if (result.paths) {
+							paths.push(...result.paths);
+						}
+					});
+
+					documents.push({
+						properties: args_.properties,
+						paths: paths,
+					});
+				} else if (args === undefined) {
+					return {};
 				} else {
 					const baseLengthX =
-						document.properties.viewBox?.width ??
-						document.properties.width;
+						args.properties.viewBox?.width ?? args.properties.width;
 					const baseLengthY =
-						document.properties.viewBox?.height ??
-						document.properties.height;
+						args.properties.viewBox?.height ??
+						args.properties.height;
 					const baseLength = baseLengthX
 						.pow(2)
 						.plus(baseLengthY.pow(2))
@@ -213,7 +253,10 @@ export class SvgDocument {
 						.sqrt();
 
 					switch (el['$ns']['local']) {
-						case 'g':
+						case 'g': {
+							let transform: string | undefined,
+								id: string | undefined;
+
 							for (const attr of Object.values(el['$'] ?? {})) {
 								if (
 									attr instanceof Object &&
@@ -223,20 +266,81 @@ export class SvgDocument {
 								) {
 									switch (attr['local']) {
 										case 'transform':
-											currentTransform = SvgTransform.fromString(
-												attr['value'],
-												currentTransform,
-											);
+											transform =
+												attr['value'] ?? transform;
+											break;
+										case 'id':
+											id =
+												(attr['value'].match(idRegex) ||
+													[])[0] ?? id;
 											break;
 									}
 								}
 							}
-							break;
+
+							if (Array.isArray(el['$$'])) {
+								const svgTransform = transform
+									? SvgTransform.fromString(transform)
+									: undefined;
+
+								const args_ = {
+									defs: args.defs,
+									properties: args.properties,
+									render: true,
+									CTM:
+										(id
+											? svgTransform
+											: args.CTM?.catenate(
+													svgTransform,
+											  )) ?? svgTransform,
+								};
+
+								const results = el['$$'].map((node) =>
+									extractPaths(node, args_),
+								);
+
+								const paths: SvgPath[] = results.flatMap(
+									(result) => result.paths ?? [],
+								);
+
+								if (id) {
+									args.defs[id] = paths;
+								}
+
+								if (args.render) {
+									if (id && args.CTM) {
+										return {
+											paths: paths.map((svgPath) =>
+												svgPath.transform(args.CTM),
+											),
+										};
+									} else {
+										return { paths: paths };
+									}
+								}
+							}
+							return {};
+						}
+						case 'defs':
+							if (Array.isArray(el['$$'])) {
+								const args_ = {
+									defs: args.defs,
+									properties: args.properties,
+									render: false,
+								};
+
+								el['$$'].forEach((node) => {
+									extractPaths(node, args_);
+								});
+							}
+							return {};
 						case 'circle':
 							{
 								let cx: Decimal | undefined,
 									cy: Decimal | undefined,
-									r: Decimal | undefined;
+									r: Decimal | undefined,
+									transform: string | undefined,
+									id: string | undefined;
 
 								for (const attr of Object.values(
 									el['$'] ?? {},
@@ -270,31 +374,64 @@ export class SvgDocument {
 													) ?? r;
 												break;
 											case 'transform':
-												currentTransform = SvgTransform.fromString(
-													attr['value'],
-													currentTransform,
-												);
+												transform =
+													attr['value'] ?? transform;
+												break;
+											case 'id':
+												id =
+													(attr['value'].match(
+														idRegex,
+													) || [])[0] ?? id;
 												break;
 										}
 									}
 								}
 
-								document.paths.push(
-									SvgPath.fromCircle(
+								if (id) {
+									const svgTransform = transform
+										? SvgTransform.fromString(transform)
+										: undefined;
+									const svgPath = SvgPath.fromCircle(
 										cx,
 										cy,
 										r,
-										currentTransform,
-									),
-								);
+										svgTransform,
+									);
+
+									args.defs[id] = [svgPath];
+
+									if (args.render) {
+										return {
+											paths: [
+												svgPath.transform(args.CTM),
+											],
+										};
+									}
+								} else if (args.render) {
+									return {
+										paths: [
+											SvgPath.fromCircle(
+												cx,
+												cy,
+												r,
+												SvgTransform.fromString(
+													transform,
+													args.CTM,
+												),
+											),
+										],
+									};
+								}
 							}
-							return;
+							return {};
 						case 'ellipse':
 							{
 								let cx: Decimal | undefined,
 									cy: Decimal | undefined,
 									rx: Decimal | undefined,
-									ry: Decimal | undefined;
+									ry: Decimal | undefined,
+									transform: string | undefined,
+									id: string | undefined;
 
 								for (const attr of Object.values(
 									el['$'] ?? {},
@@ -339,32 +476,66 @@ export class SvgDocument {
 												}
 												break;
 											case 'transform':
-												currentTransform = SvgTransform.fromString(
-													attr['value'],
-													currentTransform,
-												);
+												transform =
+													attr['value'] ?? transform;
+												break;
+											case 'id':
+												id =
+													(attr['value'].match(
+														idRegex,
+													) || [])[0] ?? id;
 												break;
 										}
 									}
 								}
 
-								document.paths.push(
-									SvgPath.fromEllipse(
+								if (id) {
+									const svgTransform = transform
+										? SvgTransform.fromString(transform)
+										: undefined;
+									const svgPath = SvgPath.fromEllipse(
 										cx,
 										cy,
 										rx,
 										ry,
-										currentTransform,
-									),
-								);
+										svgTransform,
+									);
+
+									args.defs[id] = [svgPath];
+
+									if (args.render) {
+										return {
+											paths: [
+												svgPath.transform(args.CTM),
+											],
+										};
+									}
+								} else if (args.render) {
+									return {
+										paths: [
+											SvgPath.fromEllipse(
+												cx,
+												cy,
+												rx,
+												ry,
+												SvgTransform.fromString(
+													transform,
+													args.CTM,
+												),
+											),
+										],
+									};
+								}
 							}
-							return;
+							return {};
 						case 'line':
 							{
 								let x1: Decimal | undefined,
 									x2: Decimal | undefined,
 									y1: Decimal | undefined,
-									y2: Decimal | undefined;
+									y2: Decimal | undefined,
+									transform: string | undefined,
+									id: string | undefined;
 
 								for (const attr of Object.values(
 									el['$'] ?? {},
@@ -405,29 +576,63 @@ export class SvgDocument {
 													) ?? y2;
 												break;
 											case 'transform':
-												currentTransform = SvgTransform.fromString(
-													attr['value'],
-													currentTransform,
-												);
+												transform =
+													attr['value'] ?? transform;
+												break;
+											case 'id':
+												id =
+													(attr['value'].match(
+														idRegex,
+													) || [])[0] ?? id;
 												break;
 										}
 									}
 								}
 
-								document.paths.push(
-									SvgPath.fromLine(
+								if (id) {
+									const svgTransform = transform
+										? SvgTransform.fromString(transform)
+										: undefined;
+									const svgPath = SvgPath.fromLine(
 										x1,
 										y1,
-										x1,
+										x2,
 										y2,
-										currentTransform,
-									),
-								);
+										svgTransform,
+									);
+
+									args.defs[id] = [svgPath];
+
+									if (args.render) {
+										return {
+											paths: [
+												svgPath.transform(args.CTM),
+											],
+										};
+									}
+								} else if (args.render) {
+									return {
+										paths: [
+											SvgPath.fromLine(
+												x1,
+												y1,
+												x2,
+												x2,
+												SvgTransform.fromString(
+													transform,
+													args.CTM,
+												),
+											),
+										],
+									};
+								}
 							}
-							return;
+							return {};
 						case 'path':
 							{
-								let d: string | undefined;
+								let d: string | undefined,
+									transform: string | undefined,
+									id: string | undefined;
 
 								for (const attr of Object.values(
 									el['$'] ?? {},
@@ -438,30 +643,60 @@ export class SvgDocument {
 										'local' in attr &&
 										[SVG_NS, ''].includes(attr['uri'])
 									) {
-										if (attr['local'] === 'd') {
-											d = attr['value'] ?? d;
-										} else if (
-											attr['local'] === 'transform'
-										) {
-											currentTransform = SvgTransform.fromString(
-												attr['value'],
-												currentTransform,
-											);
+										switch (attr['local']) {
+											case 'd':
+												d = attr['value'] ?? d;
+												break;
+											case 'transform':
+												transform =
+													attr['value'] ?? transform;
+												break;
+											case 'id':
+												id =
+													(attr['value'].match(
+														idRegex,
+													) || [])[0] ?? id;
+												break;
 										}
 									}
 								}
 
-								document.paths.push(
-									...SvgPath.fromString(
+								if (id) {
+									const svgTransform = transform
+										? SvgTransform.fromString(transform)
+										: undefined;
+									const svgPaths = SvgPath.fromString(
 										d,
-										currentTransform,
-									).extractSubpaths(),
-								);
+										svgTransform,
+									).extractSubpaths();
+
+									args.defs[id] = svgPaths;
+
+									if (args.render) {
+										return {
+											paths: svgPaths.map((svgPath) =>
+												svgPath.transform(args.CTM),
+											),
+										};
+									}
+								} else if (args.render) {
+									return {
+										paths: SvgPath.fromString(
+											d,
+											SvgTransform.fromString(
+												transform,
+												args.CTM,
+											),
+										).extractSubpaths(),
+									};
+								}
 							}
-							return;
+							return {};
 						case 'polygon':
 							{
-								let points: string | undefined;
+								let points: string | undefined,
+									transform: string | undefined,
+									id: string | undefined;
 
 								for (const attr of Object.values(
 									el['$'] ?? {},
@@ -472,30 +707,63 @@ export class SvgDocument {
 										'local' in attr &&
 										[SVG_NS, ''].includes(attr['uri'])
 									) {
-										if (attr['local'] === 'points') {
-											points = attr['value'] ?? points;
-										} else if (
-											attr['local'] === 'transform'
-										) {
-											currentTransform = SvgTransform.fromString(
-												attr['value'],
-												currentTransform,
-											);
+										switch (attr['local']) {
+											case 'points':
+												points =
+													attr['value'] ?? points;
+												break;
+											case 'transform':
+												transform =
+													attr['value'] ?? transform;
+												break;
+											case 'id':
+												id =
+													(attr['value'].match(
+														idRegex,
+													) || [])[0] ?? id;
+												break;
 										}
 									}
 								}
 
-								document.paths.push(
-									SvgPath.fromPolygon(
+								if (id) {
+									const svgTransform = transform
+										? SvgTransform.fromString(transform)
+										: undefined;
+									const svgPath = SvgPath.fromPolygon(
 										points,
-										currentTransform,
-									),
-								);
+										svgTransform,
+									);
+
+									args.defs[id] = [svgPath];
+
+									if (args.render) {
+										return {
+											paths: [
+												svgPath.transform(args.CTM),
+											],
+										};
+									}
+								} else if (args.render) {
+									return {
+										paths: [
+											SvgPath.fromPolygon(
+												points,
+												SvgTransform.fromString(
+													transform,
+													args.CTM,
+												),
+											),
+										],
+									};
+								}
 							}
-							return;
+							return {};
 						case 'polyline':
 							{
-								let points: string | undefined;
+								let points: string | undefined,
+									transform: string | undefined,
+									id: string | undefined;
 
 								for (const attr of Object.values(
 									el['$'] ?? {},
@@ -506,27 +774,58 @@ export class SvgDocument {
 										'local' in attr &&
 										[SVG_NS, ''].includes(attr['uri'])
 									) {
-										if (attr['local'] === 'points') {
-											points = attr['value'] ?? points;
-										} else if (
-											attr['local'] === 'transform'
-										) {
-											currentTransform = SvgTransform.fromString(
-												attr['value'],
-												currentTransform,
-											);
+										switch (attr['local']) {
+											case 'points':
+												points =
+													attr['value'] ?? points;
+												break;
+											case 'transform':
+												transform =
+													attr['value'] ?? transform;
+												break;
+											case 'id':
+												id =
+													(attr['value'].match(
+														idRegex,
+													) || [])[0] ?? id;
+												break;
 										}
 									}
 								}
 
-								document.paths.push(
-									SvgPath.fromPolyline(
+								if (id) {
+									const svgTransform = transform
+										? SvgTransform.fromString(transform)
+										: undefined;
+									const svgPath = SvgPath.fromPolyline(
 										points,
-										currentTransform,
-									),
-								);
+										svgTransform,
+									);
+
+									args.defs[id] = [svgPath];
+
+									if (args.render) {
+										return {
+											paths: [
+												svgPath.transform(args.CTM),
+											],
+										};
+									}
+								} else if (args.render) {
+									return {
+										paths: [
+											SvgPath.fromPolygon(
+												points,
+												SvgTransform.fromString(
+													transform,
+													args.CTM,
+												),
+											),
+										],
+									};
+								}
 							}
-							return;
+							return {};
 						case 'rect':
 							{
 								let x: Decimal | undefined,
@@ -534,7 +833,9 @@ export class SvgDocument {
 									rx: Decimal | undefined,
 									ry: Decimal | undefined,
 									width: Decimal | undefined,
-									height: Decimal | undefined;
+									height: Decimal | undefined,
+									transform: string | undefined,
+									id: string | undefined;
 
 								for (const attr of Object.values(
 									el['$'] ?? {},
@@ -593,36 +894,214 @@ export class SvgDocument {
 													) ?? height;
 												break;
 											case 'transform':
-												currentTransform = SvgTransform.fromString(
-													attr['value'],
-													currentTransform,
-												);
+												transform =
+													attr['value'] ?? transform;
+												break;
+											case 'id':
+												id =
+													(attr['value'].match(
+														idRegex,
+													) || [])[0] ?? id;
 												break;
 										}
 									}
 								}
 
-								document.paths.push(
-									SvgPath.fromRect(
+								if (id) {
+									const svgTransform = transform
+										? SvgTransform.fromString(transform)
+										: undefined;
+									const svgPath = SvgPath.fromRect(
 										x,
 										y,
 										width,
 										height,
 										rx,
 										ry,
-										currentTransform,
-									),
-								);
+										svgTransform,
+									);
+
+									args.defs[id] = [svgPath];
+
+									if (args.render) {
+										return {
+											paths: [
+												svgPath.transform(args.CTM),
+											],
+										};
+									}
+								} else if (args.render) {
+									return {
+										paths: [
+											SvgPath.fromRect(
+												x,
+												y,
+												width,
+												height,
+												rx,
+												ry,
+												SvgTransform.fromString(
+													transform,
+													args.CTM,
+												),
+											),
+										],
+									};
+								}
 							}
-							return;
+							return {};
+						case 'use':
+							{
+								let x: Decimal | undefined,
+									y: Decimal | undefined,
+									width: Decimal | undefined,
+									height: Decimal | undefined,
+									href: string | undefined,
+									transform: string | undefined,
+									id: string | undefined;
+
+								for (const attr of Object.values(
+									el['$'] ?? {},
+								)) {
+									if (
+										attr instanceof Object &&
+										'uri' in attr &&
+										'local' in attr
+									) {
+										if (
+											[SVG_NS, ''].includes(attr['uri'])
+										) {
+											switch (attr['local']) {
+												case 'x':
+													x =
+														parseLength(
+															attr['value'],
+															baseLengthX,
+														) ?? x;
+													break;
+												case 'y':
+													y =
+														parseLength(
+															attr['value'],
+															baseLengthY,
+														) ?? y;
+													break;
+												case 'width':
+													width =
+														parseLength(
+															attr['value'],
+															baseLengthX,
+														) ?? width;
+													break;
+												case 'height':
+													height =
+														parseLength(
+															attr['value'],
+															baseLengthY,
+														) ?? height;
+													break;
+												case 'href':
+													href =
+														(attr['value'].match(
+															hrefRegex,
+														) ?? [])[1] ?? href;
+													break;
+												case 'transform':
+													transform =
+														attr['value'] ??
+														transform;
+													break;
+												case 'id':
+													id =
+														(attr['value'].match(
+															idRegex,
+														) || [])[0] ?? id;
+													break;
+											}
+										}
+
+										if (
+											attr['uri'] === XLINK_NS &&
+											attr['local'] === 'href'
+										) {
+											href =
+												(attr['value'].match(
+													hrefRegex,
+												) ?? [])[1] ?? href;
+										}
+									}
+								}
+
+								if (!href) {
+									return {};
+								} else if (href in args.defs) {
+									if (id) {
+										const svgTransform =
+											transform || x || y
+												? SvgTransform.fromString(
+														transform,
+												  ).catenate(
+														new SvgTransform([
+															one,
+															zero,
+															zero,
+															one,
+															x ?? zero,
+															y ?? zero,
+														]),
+												  )
+												: undefined;
+										const svgPaths = args.defs[
+											href
+										].map((svgPath) =>
+											svgPath.transform(svgTransform),
+										);
+
+										args.defs[id] = svgPaths;
+
+										if (args.render) {
+											return {
+												paths: svgPaths.map((svgPath) =>
+													svgPath.transform(args.CTM),
+												),
+											};
+										}
+									} else if (args.render) {
+										const svgPaths = args.defs[href];
+
+										return {
+											paths: svgPaths.map((svgPath) =>
+												svgPath.transform(
+													SvgTransform.fromString(
+														transform,
+														args.CTM ??
+															SvgTransform.IDENTITY,
+													).catenate(
+														new SvgTransform([
+															one,
+															zero,
+															zero,
+															one,
+															x ?? zero,
+															y ?? zero,
+														]),
+													),
+												),
+											),
+										};
+									}
+								} else {
+									// TODO: (Yet) unresolved ids
+								}
+							}
+							return {};
 					}
 				}
+			} else if (Array.isArray(el['$$'])) {
+				el['$$'].forEach((node) => extractPaths(node, args));
 			}
-			if (Array.isArray(el['$$'])) {
-				el['$$'].forEach((node) =>
-					extractPaths(node, document, currentTransform),
-				);
-			}
+
+			return {};
 		};
 
 		extractPaths(result);

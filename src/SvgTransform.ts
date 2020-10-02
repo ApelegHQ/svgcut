@@ -33,7 +33,7 @@ const identity: SvgTransformMatrix = [
 ];
 
 // Test in browser with
-// const catenate = (t) => `matrix(${(()=>{const el = document.createElementNS('http://www.w3.org/2000/svg', 'g'); el.setAttribute('transform', t); const m = x.transform.baseVal.consolidate().matrix; return [m.a, m.b, m.c, m.d, m.e, m.f]})(t).join(' ')}`);
+// const catenate = (t) => `matrix(${(()=>{const el = document.createElementNS('http://www.w3.org/2000/svg', 'g'); el.setAttribute('transform', t); const m = el.transform.baseVal.consolidate().matrix; return [m.a, m.b, m.c, m.d, m.e, m.f]})(t).join(' ')}`;;
 const catenateTransform = (
 	A: SvgTransformMatrix,
 	B: SvgTransformMatrix,
@@ -59,14 +59,18 @@ export class SvgTransform {
 
 	static IDENTITY = new SvgTransform(identity);
 
-	private constructor(𝐌: SvgTransformMatrix) {
+	constructor(𝐌: SvgTransformMatrix) {
 		this.𝐌 = 𝐌;
 	}
 
 	static fromString(
-		transform: string,
+		transform?: string,
 		CTM: SvgTransform = SvgTransform.IDENTITY,
 	): SvgTransform {
+		if (!transform) {
+			return CTM;
+		}
+
 		return new SvgTransform(
 			[transform]
 				.flatMap(parseTransform)
@@ -133,6 +137,12 @@ export class SvgTransform {
 			ry: λ2.sqrt(),
 			φ: φ,
 		};
+	}
+
+	catenate(next?: SvgTransform): SvgTransform {
+		return next
+			? new SvgTransform(catenateTransform(this.𝐌, next.𝐌))
+			: this;
 	}
 
 	get hasRotation(): boolean {

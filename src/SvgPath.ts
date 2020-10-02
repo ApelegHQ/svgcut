@@ -344,6 +344,10 @@ export class SvgPath {
 		this._tree = transformTree(tree, transform);
 	}
 
+	transform(transform?: SvgTransform): SvgPath {
+		return transform ? new SvgPath(this._tree, transform) : this;
+	}
+
 	toAbsoluteCommands(): SvgPath {
 		if (this._absoluteTree) {
 			return new SvgPath(this._absoluteTree);
