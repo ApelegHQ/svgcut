@@ -1108,41 +1108,33 @@ export class SvgDocument {
 													transform,
 											  ).catenate(useTranslateTransform)
 											: undefined;
-									const svgPaths = (
-										args.defs[href] ?? [
-											new UnresolvedSvgPath(href),
-										]
-									).map((svgPath) =>
-										svgPath.transform(svgTransform),
+									const svgPath = new UnresolvedSvgPath(
+										href,
+										svgTransform,
 									);
 
-									args.defs[id] = svgPaths;
+									args.defs[id] = [svgPath];
 
 									if (args.render) {
 										return {
-											paths: svgPaths.map((svgPath) =>
+											paths: [
 												svgPath.transform(args.CTM),
-											),
+											],
 										};
 									}
 								} else if (args.render) {
-									const svgPaths = args.defs[href] ?? [
-										new UnresolvedSvgPath(href),
-									];
+									const svgPath = new UnresolvedSvgPath(
+										href,
+										transform || args.CTM
+											? SvgTransform.fromString(
+													transform,
+													args.CTM,
+											  ).catenate(useTranslateTransform)
+											: useTranslateTransform,
+									);
 
 									return {
-										paths: svgPaths.map((svgPath) =>
-											svgPath.transform(
-												transform || args.CTM
-													? SvgTransform.fromString(
-															transform,
-															args.CTM,
-													  ).catenate(
-															useTranslateTransform,
-													  )
-													: useTranslateTransform,
-											),
-										),
+										paths: [svgPath],
 									};
 								}
 							}
