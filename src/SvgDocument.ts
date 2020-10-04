@@ -55,14 +55,14 @@ type SvgDocumentStructure = {
 };
 
 type SvgParseArgs = {
-	defs: { [id: string]: SvgPath[] };
+	defs: { [id: string]: (SvgPath | UnresolvedSvgPath)[] };
 	properties: SvgDocumentProperties;
 	render: boolean;
 	CTM?: SvgTransform;
 };
 
 type SvgParseResult = {
-	paths?: SvgPath[];
+	paths?: (SvgPath | UnresolvedSvgPath)[];
 };
 
 const zero = new Decimal(0);
@@ -75,6 +75,49 @@ const hrefRegex = /^\s*#([:A-Z_a-z]*)\s*$/u;
 const idRegex = /^[:A-Z_a-z][-.0-9:A-Z_a-z]*$/u;
 const lengthRegex = /^\s*([+-]?[0-9]+(?:[Ee][+-]?[0-9]+)?|[+-]?[0-9]*[.][0-9]+(?:[Ee][+-]?[0-9]+)?)(em|ex|px|in|cm|mm|pt|pc|%)?\s*$/;
 const viewBoxRegex = /^\s*([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)(?:\s+|\s*,\s*|(?=[+-.]))([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)(?:\s+|\s*,\s*|(?=[+-.]))([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)(?:\s+|\s*,\s*|(?=[+-.]))([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)\s*$/;
+
+class UnresolvedSvgPath {
+	private _href: string;
+	private _transform?: SvgTransform;
+	private _result?: (SvgPath | UnresolvedSvgPath)[];
+
+	constructor(href: string, transform?: SvgTransform) {
+		this._href = href;
+		this._transform = transform;
+	}
+
+	transform(transform?: SvgTransform): UnresolvedSvgPath {
+		if (transform) {
+			return new UnresolvedSvgPath(
+				this._href,
+				transform.catenate(this._transform),
+			);
+		} else {
+			return this;
+		}
+	}
+
+	resolve(defs: {
+		[id: string]: (SvgPath | UnresolvedSvgPath)[];
+	}): (SvgPath | UnresolvedSvgPath)[] {
+		if (this._result) {
+			return this._result;
+		} else if (defs[this._href]) {
+			this._result = [];
+			const result = defs[this._href]
+				.flatMap((path) =>
+					path instanceof UnresolvedSvgPath
+						? path.resolve(defs)
+						: [path],
+				)
+				.map((path) => path.transform(this._transform));
+			this._result = result;
+			return result;
+		} else {
+			return [this];
+		}
+	}
+}
 
 const parseLength = (value: string, baseLength: Decimal) => {
 	const match = value.match(lengthRegex);
@@ -213,7 +256,7 @@ export class SvgDocument {
 					);
 
 					const defs = {};
-					const paths: SvgPath[] = [];
+					const paths: (SvgPath | UnresolvedSvgPath)[] = [];
 
 					const args_ = {
 						properties: {
@@ -236,7 +279,15 @@ export class SvgDocument {
 
 					documents.push({
 						properties: args_.properties,
-						paths: paths,
+						paths: paths
+							.flatMap((path) =>
+								path instanceof UnresolvedSvgPath
+									? path.resolve(defs)
+									: path,
+							)
+							.filter(
+								(path) => path instanceof SvgPath,
+							) as SvgPath[],
 					});
 				} else if (args === undefined) {
 					return {};
@@ -299,7 +350,10 @@ export class SvgDocument {
 									extractPaths(node, args_),
 								);
 
-								const paths: SvgPath[] = results.flatMap(
+								const paths: (
+									| SvgPath
+									| UnresolvedSvgPath
+								)[] = results.flatMap(
 									(result) => result.paths ?? [],
 								);
 
@@ -1034,64 +1088,62 @@ export class SvgDocument {
 
 								if (!href) {
 									return {};
-								} else if (href in args.defs) {
-									if (id) {
-										const svgTransform =
-											transform || x || y
-												? SvgTransform.fromString(
-														transform,
-												  ).catenate(
-														new SvgTransform([
-															one,
-															zero,
-															zero,
-															one,
-															x ?? zero,
-															y ?? zero,
-														]),
-												  )
-												: undefined;
-										const svgPaths = args.defs[
-											href
-										].map((svgPath) =>
-											svgPath.transform(svgTransform),
-										);
+								}
+								const useTranslateTransform =
+									x || y
+										? new SvgTransform([
+												one,
+												zero,
+												zero,
+												one,
+												x ?? zero,
+												y ?? zero,
+										  ])
+										: undefined;
 
-										args.defs[id] = svgPaths;
+								if (id) {
+									const svgTransform =
+										transform || useTranslateTransform
+											? SvgTransform.fromString(
+													transform,
+											  ).catenate(useTranslateTransform)
+											: undefined;
+									const svgPaths = (
+										args.defs[href] ?? [
+											new UnresolvedSvgPath(href),
+										]
+									).map((svgPath) =>
+										svgPath.transform(svgTransform),
+									);
 
-										if (args.render) {
-											return {
-												paths: svgPaths.map((svgPath) =>
-													svgPath.transform(args.CTM),
-												),
-											};
-										}
-									} else if (args.render) {
-										const svgPaths = args.defs[href];
+									args.defs[id] = svgPaths;
 
+									if (args.render) {
 										return {
 											paths: svgPaths.map((svgPath) =>
-												svgPath.transform(
-													SvgTransform.fromString(
-														transform,
-														args.CTM ??
-															SvgTransform.IDENTITY,
-													).catenate(
-														new SvgTransform([
-															one,
-															zero,
-															zero,
-															one,
-															x ?? zero,
-															y ?? zero,
-														]),
-													),
-												),
+												svgPath.transform(args.CTM),
 											),
 										};
 									}
-								} else {
-									// TODO: (Yet) unresolved ids
+								} else if (args.render) {
+									const svgPaths = args.defs[href] ?? [
+										new UnresolvedSvgPath(href),
+									];
+
+									return {
+										paths: svgPaths.map((svgPath) =>
+											svgPath.transform(
+												transform || args.CTM
+													? SvgTransform.fromString(
+															transform,
+															args.CTM,
+													  ).catenate(
+															useTranslateTransform,
+													  )
+													: useTranslateTransform,
+											),
+										),
+									};
 								}
 							}
 							return {};
