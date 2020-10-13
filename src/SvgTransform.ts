@@ -35,16 +35,20 @@ const identity: SvgTransformMatrix = [
 // Test in browser with
 // const catenate = (t) => `matrix(${(()=>{const el = document.createElementNS('http://www.w3.org/2000/svg', 'g'); el.setAttribute('transform', t); const m = el.transform.baseVal.consolidate().matrix; return [m.a, m.b, m.c, m.d, m.e, m.f]})(t).join(' ')}`;;
 const catenateTransform = (
-	A: SvgTransformMatrix,
-	B: SvgTransformMatrix,
-): SvgTransformMatrix => [
-	A[0].mul(B[0]).plus(B[1].mul(A[2])),
-	B[0].mul(A[1]).plus(B[1].mul(A[3])),
-	A[0].mul(B[2]).plus(A[2].mul(B[3])),
-	A[1].mul(B[2]).plus(A[3].mul(B[3])),
-	A[0].mul(B[4]).plus(A[2].mul(B[5])).plus(A[4]),
-	A[1].mul(B[4]).plus(A[3].mul(B[5])).plus(A[5]),
-];
+	A?: SvgTransformMatrix,
+	B?: SvgTransformMatrix,
+): SvgTransformMatrix | undefined =>
+	(A &&
+		B && [
+			A[0].mul(B[0]).plus(B[1].mul(A[2])),
+			B[0].mul(A[1]).plus(B[1].mul(A[3])),
+			A[0].mul(B[2]).plus(A[2].mul(B[3])),
+			A[1].mul(B[2]).plus(A[3].mul(B[3])),
+			A[0].mul(B[4]).plus(A[2].mul(B[5])).plus(A[4]),
+			A[1].mul(B[4]).plus(A[3].mul(B[5])).plus(A[5]),
+		]) ??
+	A ??
+	B;
 
 const parseTransform = (transform: string): SvgTransformMatrix[] => {
 	try {
@@ -66,20 +70,20 @@ export class SvgTransform {
 	static fromString(
 		transform?: string,
 		CTM: SvgTransform = SvgTransform.IDENTITY,
-	): SvgTransform {
+	): SvgTransform | undefined {
 		if (!transform) {
 			return CTM;
 		}
 
-		return new SvgTransform(
-			[transform]
-				.flatMap(parseTransform)
-				.reduce(
-					(acc: SvgTransformMatrix, cv: SvgTransformMatrix) =>
-						catenateTransform(acc, cv),
-					CTM.𝐌,
-				),
-		);
+		const 𝐌 = [transform]
+			.flatMap(parseTransform)
+			.reduce(
+				(acc?: SvgTransformMatrix, cv?: SvgTransformMatrix) =>
+					catenateTransform(acc, cv),
+				CTM.𝐌,
+			);
+
+		return 𝐌 && new SvgTransform(𝐌);
 	}
 
 	toString(): string {
@@ -141,7 +145,7 @@ export class SvgTransform {
 
 	catenate(next?: SvgTransform): SvgTransform {
 		return next
-			? new SvgTransform(catenateTransform(this.𝐌, next.𝐌))
+			? new SvgTransform(catenateTransform(this.𝐌, next.𝐌) ?? identity)
 			: this;
 	}
 
@@ -151,5 +155,17 @@ export class SvgTransform {
 
 	get orientationPreserving(): boolean {
 		return this.𝐌[0].mul(this.𝐌[3]).sub(this.𝐌[1].mul(this.𝐌[2])).gte(0);
+	}
+
+	static catenate(
+		...transforms: (SvgTransform | undefined)[]
+	): SvgTransform | undefined {
+		const 𝐌 = transforms
+			.map((transform: SvgTransform | undefined) => transform?.𝐌)
+			.reduceRight((acc?: SvgTransformMatrix, cv?: SvgTransformMatrix) =>
+				catenateTransform(acc, cv),
+			);
+
+		return 𝐌 && new SvgTransform(𝐌);
 	}
 }

@@ -119,6 +119,146 @@ class UnresolvedSvgPath {
 	}
 }
 
+const preserveAspectRatioRegex = /^\s*(x(Min|Mid|Max)Y(Min|Mid|Max)|none)\s*(meet|slice)?\s*$/;
+
+const viewBoxTransform = (
+	properties: SvgDocumentProperties,
+	preserveAspectRatio?: string,
+): SvgTransform | undefined => {
+	if (!properties.viewBox) {
+		return;
+	}
+
+	enum Align {
+		None,
+		Min,
+		Mid,
+		Max,
+	}
+
+	enum MeetOrSlice {
+		Meet,
+		Slice,
+	}
+
+	let alignX: Align = Align.Mid;
+	let alignY: Align = Align.Mid;
+	let meetOrSlice: MeetOrSlice = MeetOrSlice.Meet;
+
+	const preserveAspectRatioParsed = preserveAspectRatio?.match(
+		preserveAspectRatioRegex,
+	);
+
+	if (preserveAspectRatioParsed) {
+		if (preserveAspectRatioParsed[1] === 'none') {
+			alignX = alignY = Align.None;
+		} else {
+			if (preserveAspectRatioParsed[2] === 'Min') {
+				alignX = Align.Min;
+			} else if (preserveAspectRatioParsed[2] === 'Mid') {
+				alignX = Align.Mid;
+			} else if (preserveAspectRatioParsed[2] === 'Max') {
+				alignX = Align.Max;
+			}
+
+			if (preserveAspectRatioParsed[3] === 'Min') {
+				alignY = Align.Min;
+			} else if (preserveAspectRatioParsed[3] === 'Mid') {
+				alignY = Align.Mid;
+			} else if (preserveAspectRatioParsed[3] === 'Max') {
+				alignY = Align.Max;
+			}
+
+			if (preserveAspectRatioParsed[4] === 'meet') {
+				meetOrSlice = MeetOrSlice.Meet;
+			} else if (preserveAspectRatioParsed[4] === 'slice') {
+				meetOrSlice = MeetOrSlice.Slice;
+			}
+		}
+	}
+
+	if (alignX === Align.None) {
+		const [Sx, Sy] = [
+			properties.width.div(properties.viewBox.width),
+			properties.height.div(properties.viewBox.height),
+		];
+
+		return new SvgTransform([
+			Sx,
+			zero,
+			zero,
+			Sy,
+			properties.viewBox.minX.neg().mul(Sx),
+			properties.viewBox.minY.neg().mul(Sy),
+		]);
+	} else {
+		let S: Decimal = one,
+			ftx: Decimal = zero,
+			fty: Decimal = zero,
+			tx: Decimal,
+			ty: Decimal;
+
+		if (meetOrSlice === MeetOrSlice.Meet) {
+			S = Decimal.min(
+				properties.width.div(properties.viewBox.width),
+				properties.height.div(properties.viewBox.height),
+			);
+
+			if (properties.width.gt(properties.height)) {
+				ftx = one;
+			} else if (properties.width.lt(properties.height)) {
+				fty = one;
+			}
+		} else if (meetOrSlice === MeetOrSlice.Slice) {
+			S = Decimal.max(
+				properties.width.div(properties.viewBox.width),
+				properties.height.div(properties.viewBox.height),
+			);
+
+			if (properties.width.lt(properties.height)) {
+				ftx = one;
+			} else if (properties.width.gt(properties.height)) {
+				fty = one;
+			}
+		}
+
+		tx = properties.viewBox.minX.neg().mul(S);
+		ty = properties.viewBox.minY.neg().mul(S);
+
+		if (alignX === Align.Mid) {
+			tx = tx.plus(
+				ftx.mul(
+					properties.width
+						.sub(properties.viewBox.width.mul(S))
+						.div(2),
+				),
+			);
+		} else if (alignX === Align.Max) {
+			tx = tx.plus(
+				ftx.mul(properties.width.sub(properties.viewBox.width.mul(S))),
+			);
+		}
+
+		if (alignY === Align.Mid) {
+			ty = ty.plus(
+				fty.mul(
+					properties.height
+						.sub(properties.viewBox.height.mul(S))
+						.div(2),
+				),
+			);
+		} else if (alignY === Align.Max) {
+			ty = ty.plus(
+				fty.mul(
+					properties.height.sub(properties.viewBox.height.mul(S)),
+				),
+			);
+		}
+
+		return new SvgTransform([S, zero, zero, S, tx, ty]);
+	}
+};
+
 const parseLength = (value: string, baseLength: Decimal) => {
 	const match = value.match(lengthRegex);
 	if (match) {
@@ -223,6 +363,7 @@ export class SvgDocument {
 										const viewBoxValues = String(
 											attr['value'],
 										).match(viewBoxRegex);
+
 										if (viewBoxValues) {
 											viewBox = {
 												minX: new Decimal(
@@ -251,9 +392,7 @@ export class SvgDocument {
 						}
 					}
 
-					const svgTransform: SvgTransform = SvgTransform.fromString(
-						transform,
-					);
+					const svgTransform = SvgTransform.fromString(transform);
 
 					const defs = {};
 					const paths: (SvgPath | UnresolvedSvgPath)[] = [];
@@ -330,20 +469,20 @@ export class SvgDocument {
 							}
 
 							if (Array.isArray(el['$$'])) {
-								const svgTransform = transform
-									? SvgTransform.fromString(transform)
-									: undefined;
+								const svgTransform = SvgTransform.fromString(
+									transform,
+								);
 
 								const args_ = {
 									defs: args.defs,
 									properties: args.properties,
 									render: true,
-									CTM:
-										(id
-											? svgTransform
-											: args.CTM?.catenate(
-													svgTransform,
-											  )) ?? svgTransform,
+									CTM: id
+										? svgTransform
+										: SvgTransform.catenate(
+												svgTransform,
+												args.CTM,
+										  ),
 								};
 
 								const results = el['$$'].map((node) =>
@@ -388,6 +527,172 @@ export class SvgDocument {
 								});
 							}
 							return {};
+						case 'svg': {
+							// TODO: 'symbol'
+							let width: Decimal | undefined,
+								height: Decimal | undefined,
+								x: Decimal | undefined,
+								y: Decimal | undefined,
+								preserveAspectRatio: string | undefined,
+								viewBox: SvgViewBox | undefined,
+								transform: string | undefined,
+								id: string | undefined;
+
+							for (const attr of Object.values(el['$'] ?? {})) {
+								if (
+									attr instanceof Object &&
+									'uri' in attr &&
+									'local' in attr &&
+									[SVG_NS, ''].includes(attr['uri'])
+								) {
+									switch (attr['local']) {
+										case 'width':
+											width =
+												parseLength(
+													attr['value'],
+													baseLengthX,
+												) ?? width;
+											break;
+										case 'height':
+											height =
+												parseLength(
+													attr['value'],
+													baseLengthY,
+												) ?? height;
+											break;
+										case 'x':
+											x =
+												parseLength(
+													attr['value'],
+													baseLengthX,
+												) ?? x;
+											break;
+										case 'y':
+											y =
+												parseLength(
+													attr['value'],
+													baseLengthY,
+												) ?? y;
+											break;
+										case 'preserveAspectRatio':
+											preserveAspectRatio =
+												attr['value'] ??
+												preserveAspectRatio;
+											break;
+										case 'viewBox':
+											{
+												const viewBoxValues = String(
+													attr['value'],
+												).match(viewBoxRegex);
+
+												if (viewBoxValues) {
+													viewBox = {
+														minX: new Decimal(
+															viewBoxValues[1],
+														),
+														minY: new Decimal(
+															viewBoxValues[2],
+														),
+														width: new Decimal(
+															viewBoxValues[3],
+														),
+														height: new Decimal(
+															viewBoxValues[4],
+														),
+													};
+												}
+											}
+											break;
+										case 'transform':
+											transform =
+												attr['value'] ?? transform;
+											break;
+										case 'id':
+											id =
+												(attr['value'].match(idRegex) ||
+													[])[0] ?? id;
+											break;
+									}
+								}
+							}
+
+							if (Array.isArray(el['$$'])) {
+								const properties = {
+									height:
+										height ??
+										args.properties.viewBox?.height ??
+										args.properties.height,
+									width:
+										width ??
+										args.properties.viewBox?.width ??
+										args.properties.width,
+									version: args.properties.version,
+									viewBox: viewBox ?? args.properties.viewBox,
+								};
+
+								const useTranslateTransform =
+									x ?? y
+										? new SvgTransform([
+												one,
+												zero,
+												zero,
+												one,
+												x ?? zero,
+												y ?? zero,
+										  ])
+										: undefined;
+
+								const svgTransform = SvgTransform.catenate(
+									viewBoxTransform(
+										properties,
+										preserveAspectRatio,
+									),
+									useTranslateTransform,
+									SvgTransform.fromString(transform),
+								);
+
+								const args_ = {
+									defs: args.defs,
+									properties: properties,
+									render: true,
+									CTM: id
+										? svgTransform
+										: SvgTransform.catenate(
+												svgTransform,
+												args.CTM,
+										  ),
+								};
+
+								const results = el['$$'].map((node) =>
+									extractPaths(node, args_),
+								);
+
+								const paths: (
+									| SvgPath
+									| UnresolvedSvgPath
+								)[] = results.flatMap(
+									(result) => result.paths ?? [],
+								);
+
+								// TODO: Use needs to handle width and height
+								if (id) {
+									args.defs[id] = paths;
+								}
+
+								if (args.render) {
+									if (id && args.CTM) {
+										return {
+											paths: paths.map((svgPath) =>
+												svgPath.transform(args.CTM),
+											),
+										};
+									} else {
+										return { paths: paths };
+									}
+								}
+							}
+							return {};
+						}
 						case 'circle':
 							{
 								let cx: Decimal | undefined,
@@ -435,16 +740,16 @@ export class SvgDocument {
 												id =
 													(attr['value'].match(
 														idRegex,
-													) || [])[0] ?? id;
+													) ?? [])[0] ?? id;
 												break;
 										}
 									}
 								}
 
 								if (id) {
-									const svgTransform = transform
-										? SvgTransform.fromString(transform)
-										: undefined;
+									const svgTransform = SvgTransform.fromString(
+										transform,
+									);
 									const svgPath = SvgPath.fromCircle(
 										cx,
 										cy,
@@ -537,16 +842,16 @@ export class SvgDocument {
 												id =
 													(attr['value'].match(
 														idRegex,
-													) || [])[0] ?? id;
+													) ?? [])[0] ?? id;
 												break;
 										}
 									}
 								}
 
 								if (id) {
-									const svgTransform = transform
-										? SvgTransform.fromString(transform)
-										: undefined;
+									const svgTransform = SvgTransform.fromString(
+										transform,
+									);
 									const svgPath = SvgPath.fromEllipse(
 										cx,
 										cy,
@@ -637,16 +942,16 @@ export class SvgDocument {
 												id =
 													(attr['value'].match(
 														idRegex,
-													) || [])[0] ?? id;
+													) ?? [])[0] ?? id;
 												break;
 										}
 									}
 								}
 
 								if (id) {
-									const svgTransform = transform
-										? SvgTransform.fromString(transform)
-										: undefined;
+									const svgTransform = SvgTransform.fromString(
+										transform,
+									);
 									const svgPath = SvgPath.fromLine(
 										x1,
 										y1,
@@ -709,16 +1014,16 @@ export class SvgDocument {
 												id =
 													(attr['value'].match(
 														idRegex,
-													) || [])[0] ?? id;
+													) ?? [])[0] ?? id;
 												break;
 										}
 									}
 								}
 
 								if (id) {
-									const svgTransform = transform
-										? SvgTransform.fromString(transform)
-										: undefined;
+									const svgTransform = SvgTransform.fromString(
+										transform,
+									);
 									const svgPaths = SvgPath.fromString(
 										d,
 										svgTransform,
@@ -774,16 +1079,16 @@ export class SvgDocument {
 												id =
 													(attr['value'].match(
 														idRegex,
-													) || [])[0] ?? id;
+													) ?? [])[0] ?? id;
 												break;
 										}
 									}
 								}
 
 								if (id) {
-									const svgTransform = transform
-										? SvgTransform.fromString(transform)
-										: undefined;
+									const svgTransform = SvgTransform.fromString(
+										transform,
+									);
 									const svgPath = SvgPath.fromPolygon(
 										points,
 										svgTransform,
@@ -841,16 +1146,16 @@ export class SvgDocument {
 												id =
 													(attr['value'].match(
 														idRegex,
-													) || [])[0] ?? id;
+													) ?? [])[0] ?? id;
 												break;
 										}
 									}
 								}
 
 								if (id) {
-									const svgTransform = transform
-										? SvgTransform.fromString(transform)
-										: undefined;
+									const svgTransform = SvgTransform.fromString(
+										transform,
+									);
 									const svgPath = SvgPath.fromPolyline(
 										points,
 										svgTransform,
@@ -955,16 +1260,16 @@ export class SvgDocument {
 												id =
 													(attr['value'].match(
 														idRegex,
-													) || [])[0] ?? id;
+													) ?? [])[0] ?? id;
 												break;
 										}
 									}
 								}
 
 								if (id) {
-									const svgTransform = transform
-										? SvgTransform.fromString(transform)
-										: undefined;
+									const svgTransform = SvgTransform.fromString(
+										transform,
+									);
 									const svgPath = SvgPath.fromRect(
 										x,
 										y,
@@ -1069,7 +1374,7 @@ export class SvgDocument {
 													id =
 														(attr['value'].match(
 															idRegex,
-														) || [])[0] ?? id;
+														) ?? [])[0] ?? id;
 													break;
 											}
 										}
@@ -1089,8 +1394,9 @@ export class SvgDocument {
 								if (!href) {
 									return {};
 								}
+
 								const useTranslateTransform =
-									x || y
+									x ?? y
 										? new SvgTransform([
 												one,
 												zero,
@@ -1102,12 +1408,10 @@ export class SvgDocument {
 										: undefined;
 
 								if (id) {
-									const svgTransform =
-										transform || useTranslateTransform
-											? SvgTransform.fromString(
-													transform,
-											  ).catenate(useTranslateTransform)
-											: undefined;
+									const svgTransform = SvgTransform.catenate(
+										useTranslateTransform,
+										SvgTransform.fromString(transform),
+									);
 									const svgPath = new UnresolvedSvgPath(
 										href,
 										svgTransform,
@@ -1125,12 +1429,13 @@ export class SvgDocument {
 								} else if (args.render) {
 									const svgPath = new UnresolvedSvgPath(
 										href,
-										transform || args.CTM
-											? SvgTransform.fromString(
-													transform,
-													args.CTM,
-											  ).catenate(useTranslateTransform)
-											: useTranslateTransform,
+										SvgTransform.catenate(
+											useTranslateTransform,
+											SvgTransform.fromString(
+												transform,
+												args.CTM,
+											),
+										),
 									);
 
 									return {
