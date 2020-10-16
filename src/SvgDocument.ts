@@ -1458,14 +1458,22 @@ export class SvgDocument {
 		return documents.map((document) => new SvgDocument(document));
 	}
 
-	toString(): string {
-		return `<svg width="${this.structure.properties.width}" height="${
-			this.structure.properties.height
-		}" version="${this.structure.properties.version}" ${
+	toString(usePhysicalDimensions = true): string {
+		// Use physical dimension units to support software that assumes PPI is not 96
+		const [width, height] = [
+			this.structure.properties.width,
+			this.structure.properties.height,
+		].map((dimension) =>
+			usePhysicalDimensions ? `${dimension.mul(0.75)}pt` : `${dimension}`,
+		);
+
+		return `<svg width="${width}" height="${height}" version="${
+			this.structure.properties.version
+		}" ${
 			this.structure.properties.viewBox
 				? `viewBox="${this.structure.properties.viewBox.minX} ${this.structure.properties.viewBox.minY} ${this.structure.properties.viewBox.width} ${this.structure.properties.viewBox.height}"`
 				: ''
-		} xmlns="${SVG_NS}"><style type="text/css">path{fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;}</style><g>${
+		} xmlns="${SVG_NS}"><style type="text/css">@media only screen { path{fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;} }</style><g>${
 			this.structure.paths.length
 				? this.structure.paths
 						.map((path) => `<path d="${path}" />`)
