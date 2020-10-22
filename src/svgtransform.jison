@@ -48,15 +48,21 @@
 %% /* language grammar */
 
 root
-	: transform_sequence EOF
+	: transform_sequence_or_empty EOF
 		{ return $1; }
 	;
 
-transform_sequence
-	: comma_wsp
+transform_sequence_or_empty
+	: %empty
 		{ $$ = [ ]; }
-	| transform_sequence transform
-		{ $$ = [...$1, $2]; }
+	| transform_sequence
+	;
+
+transform_sequence
+	: transform
+		{ $$ = [ $1 ]; }
+	| transform_sequence comma_wsp transform
+		{ $$ = [...$1, $3]; }
 	;
 
 transform
@@ -130,7 +136,7 @@ scale_args
 				$1,
 				zero,
 				zero,
-				zero,
+				$1,
 				zero,
 				zero,
 			];

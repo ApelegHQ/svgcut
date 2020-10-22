@@ -800,6 +800,10 @@ export class SvgPath {
 			return this._start;
 		}
 
+		if (!this._tree.length) {
+			return (this._start = [zero, zero]);
+		}
+
 		let x: Decimal = zero,
 			y: Decimal = zero;
 
@@ -822,6 +826,10 @@ export class SvgPath {
 	get end(): [Decimal, Decimal] {
 		if (this._end) {
 			return this._end;
+		}
+
+		if (!this._tree.length) {
+			return (this._end = [zero, zero]);
 		}
 
 		let x: Decimal = zero,
@@ -869,6 +877,10 @@ export class SvgPath {
 	get centroid(): [Decimal, Decimal] {
 		if (this._centroid) {
 			return this._centroid;
+		}
+
+		if (!this._tree.length) {
+			return (this._centroid = [zero, zero]);
 		}
 
 		let count = 0;

@@ -1,14 +1,17 @@
 {
   "name": "svgcut",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Reorder paths in an SVG file by relative proximity",
   "main": "src/index.ts",
   "devDependencies": {
+    "@types/chai": "^4.2.14",
+    "@types/mocha": "^8.0.3",
     "@types/node": "^14.0.5",
     "@types/xml2js": "^0.4.5",
     "@typescript-eslint/eslint-plugin": "^3.0.1",
     "@typescript-eslint/parser": "^3.0.1",
     "browserify": "^16.5.1",
+    "chai": "^4.2.0",
     "decimal.js": "^10.2.0",
     "eslint": "^7.1.0",
     "eslint-config-prettier": "^6.11.0",
@@ -19,8 +22,11 @@
     "grunt-exorcise": "^2.1.1",
     "grunt-jison": "^1.3.3",
     "jison": "^0.4.18",
+    "mocha": "^8.2.0",
+    "nyc": "^15.1.0",
     "prettier": "^2.0.5",
     "tinyify": "^2.5.2",
+    "ts-node": "^9.0.0",
     "tsify": "^4.0.1",
     "typescript": "^3.9.3",
     "xml2js": "^0.4.23"
@@ -29,7 +35,8 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lintFix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "pack": "eslint . --ext .js,.jsx,.ts,.tsx && tsc && grunt",
-    "start": "npm run pack && node test/test.js"
+    "start": "npm run pack && node test/test.js",
+    "test": "nyc -x src/**/*.spec.ts mocha -r ts-node/register src/**/*.spec.ts"
   },
   "author": "Ricardo Iván Vieitez Parra",
   "license": "",
