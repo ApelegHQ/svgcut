@@ -852,8 +852,10 @@ export class SvgPath {
 				break;
 			case 'H':
 				x = lastArg as Decimal;
+				[, y] = this.start;
 				break;
 			case 'V':
+				[x] = this.start;
 				y = lastArg as Decimal;
 				break;
 			case 'Z':
@@ -1098,7 +1100,7 @@ export class SvgPath {
 				],
 				transform,
 			);
-		} else if (rx.lte(width.div(2)) && ry.lte(height.div(2))) {
+		} else if (rx.lt(width.div(2)) && ry.lt(height.div(2))) {
 			return new SvgPath(
 				[
 					['M', [[x.plus(rx), y]]],
@@ -1114,7 +1116,7 @@ export class SvgPath {
 				],
 				transform,
 			);
-		} else if (rx.lte(width.div(2))) {
+		} else if (rx.lt(width.div(2))) {
 			return new SvgPath(
 				[
 					['M', [[x.plus(rx), y]]],
@@ -1150,7 +1152,7 @@ export class SvgPath {
 				],
 				transform,
 			);
-		} else if (ry.lte(height.div(2))) {
+		} else if (ry.lt(height.div(2))) {
 			return new SvgPath(
 				[
 					['M', [[x.plus(width), y.plus(ry)]]],

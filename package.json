@@ -1,6 +1,6 @@
 {
   "name": "svgcut",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Reorder paths in an SVG file by relative proximity",
   "main": "src/index.ts",
   "devDependencies": {

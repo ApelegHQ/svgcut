@@ -70,9 +70,15 @@ const one = new Decimal(1);
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const XLINK_NS = 'http://www.w3.org/1999/xlink';
 
-// TODO: Support for whole range of characters allowed in the SVG spec
-const hrefRegex = /^\s*#([:A-Z_a-z]*)\s*$/u;
-const idRegex = /^[:A-Z_a-z][-.0-9:A-Z_a-z]*$/u;
+/*
+ * https://www.w3.org/TR/2006/REC-xml11-20060816/#NT-Name
+ * [4]   	NameStartChar	   ::=   	":" | [A-Z] | "_" | [a-z] | [#xC0-#xD6] | [#xD8-#xF6] | [#xF8-#x2FF] | [#x370-#x37D] | [#x37F-#x1FFF] | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF] | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD] | [#x10000-#xEFFFF]
+ * [4a]   	NameChar	   ::=   	NameStartChar | "-" | "." | [0-9] | #xB7 | [#x0300-#x036F] | [#x203F-#x2040]
+ * [5]   	Name	   ::=   	NameStartChar (NameChar)*
+ */
+const idRegex = /^(?::[A-Z]_[a-z][\u{C0}-\u{D6}][\u{D8}-\u{F6}][\u{F8}-\u{2FF}][\u{370}-\u{37D}][\u{37F}-\u{1FFF}][\u{200C}-\u{200D}][\u{2070}-\u{218F}][\u{2C00}-\u{2FEF}][\u{3001}-\u{D7FF}][\u{F900}-\u{FDCF}][\u{FDF0}-\u{FFFD}][\u{10000}-\u{EFFFF}])(?::[A-Z]_[a-z][\u{C0}-\u{D6}][\u{D8}-\u{F6}][\u{F8}-\u{2FF}][\u{370}-\u{37D}][\u{37F}-\u{1FFF}][\u{200C}-\u{200D}][\u{2070}-\u{218F}][\u{2C00}-\u{2FEF}][\u{3001}-\u{D7FF}][\u{F900}-\u{FDCF}][\u{FDF0}-\u{FFFD}][\u{10000}-\u{EFFFF}]-.[0-9]#xB7[\u{0300}-\u{036F}][\u{203F}-\u{2040}])*$/u;
+const hrefRegex = /^\s*#(?::[A-Z]_[a-z][\u{C0}-\u{D6}][\u{D8}-\u{F6}][\u{F8}-\u{2FF}][\u{370}-\u{37D}][\u{37F}-\u{1FFF}][\u{200C}-\u{200D}][\u{2070}-\u{218F}][\u{2C00}-\u{2FEF}][\u{3001}-\u{D7FF}][\u{F900}-\u{FDCF}][\u{FDF0}-\u{FFFD}][\u{10000}-\u{EFFFF}])(?::[A-Z]_[a-z][\u{C0}-\u{D6}][\u{D8}-\u{F6}][\u{F8}-\u{2FF}][\u{370}-\u{37D}][\u{37F}-\u{1FFF}][\u{200C}-\u{200D}][\u{2070}-\u{218F}][\u{2C00}-\u{2FEF}][\u{3001}-\u{D7FF}][\u{F900}-\u{FDCF}][\u{FDF0}-\u{FFFD}][\u{10000}-\u{EFFFF}]-.[0-9]#xB7[\u{0300}-\u{036F}][\u{203F}-\u{2040}])*\s*$/u;
+
 const lengthRegex = /^\s*([+-]?[0-9]+(?:[Ee][+-]?[0-9]+)?|[+-]?[0-9]*[.][0-9]+(?:[Ee][+-]?[0-9]+)?)(em|ex|px|in|cm|mm|pt|pc|%)?\s*$/;
 const viewBoxRegex = /^\s*([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)(?:\s+|\s*,\s*|(?=[+-.]))([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)(?:\s+|\s*,\s*|(?=[+-.]))([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)(?:\s+|\s*,\s*|(?=[+-.]))([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)\s*$/;
 
