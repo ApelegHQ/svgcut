@@ -1,6 +1,6 @@
 {
   "name": "svgcut",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Reorder paths in an SVG file by relative proximity",
   "main": "src/index.ts",
   "devDependencies": {
@@ -36,7 +36,7 @@
     "lintFix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "pack": "eslint . --ext .js,.jsx,.ts,.tsx && tsc && grunt",
     "start": "npm run pack && node test/test.js",
-    "test": "nyc -x src/**/*.spec.ts mocha -r ts-node/register src/**/*.spec.ts"
+    "test": "nyc -x src/**/*.spec.ts -x test/**/*.test.ts mocha -r ts-node/register src/**/*.spec.ts test/**/*.test.ts"
   },
   "author": "Ricardo Iván Vieitez Parra",
   "license": "",

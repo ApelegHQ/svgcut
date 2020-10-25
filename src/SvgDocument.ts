@@ -76,8 +76,10 @@ const XLINK_NS = 'http://www.w3.org/1999/xlink';
  * [4a]   	NameChar	   ::=   	NameStartChar | "-" | "." | [0-9] | #xB7 | [#x0300-#x036F] | [#x203F-#x2040]
  * [5]   	Name	   ::=   	NameStartChar (NameChar)*
  */
-const idRegex = /^(?::[A-Z]_[a-z][\u{C0}-\u{D6}][\u{D8}-\u{F6}][\u{F8}-\u{2FF}][\u{370}-\u{37D}][\u{37F}-\u{1FFF}][\u{200C}-\u{200D}][\u{2070}-\u{218F}][\u{2C00}-\u{2FEF}][\u{3001}-\u{D7FF}][\u{F900}-\u{FDCF}][\u{FDF0}-\u{FFFD}][\u{10000}-\u{EFFFF}])(?::[A-Z]_[a-z][\u{C0}-\u{D6}][\u{D8}-\u{F6}][\u{F8}-\u{2FF}][\u{370}-\u{37D}][\u{37F}-\u{1FFF}][\u{200C}-\u{200D}][\u{2070}-\u{218F}][\u{2C00}-\u{2FEF}][\u{3001}-\u{D7FF}][\u{F900}-\u{FDCF}][\u{FDF0}-\u{FFFD}][\u{10000}-\u{EFFFF}]-.[0-9]#xB7[\u{0300}-\u{036F}][\u{203F}-\u{2040}])*$/u;
-const hrefRegex = /^\s*#(?::[A-Z]_[a-z][\u{C0}-\u{D6}][\u{D8}-\u{F6}][\u{F8}-\u{2FF}][\u{370}-\u{37D}][\u{37F}-\u{1FFF}][\u{200C}-\u{200D}][\u{2070}-\u{218F}][\u{2C00}-\u{2FEF}][\u{3001}-\u{D7FF}][\u{F900}-\u{FDCF}][\u{FDF0}-\u{FFFD}][\u{10000}-\u{EFFFF}])(?::[A-Z]_[a-z][\u{C0}-\u{D6}][\u{D8}-\u{F6}][\u{F8}-\u{2FF}][\u{370}-\u{37D}][\u{37F}-\u{1FFF}][\u{200C}-\u{200D}][\u{2070}-\u{218F}][\u{2C00}-\u{2FEF}][\u{3001}-\u{D7FF}][\u{F900}-\u{FDCF}][\u{FDF0}-\u{FFFD}][\u{10000}-\u{EFFFF}]-.[0-9]#xB7[\u{0300}-\u{036F}][\u{203F}-\u{2040}])*\s*$/u;
+// eslint-disable-next-line no-misleading-character-class
+const idRegex = /^\s*([:A-Z_a-z\u{C0}-\u{D6}\u{D8}-\u{F6}\u{F8}-\u{2FF}\u{370}-\u{37D}\u{37F}-\u{1FFF}\u{200C}-\u{200D}\u{2070}-\u{218F}\u{2C00}-\u{2FEF}\u{3001}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFFD}\u{10000}-\u{EFFFF}][:A-Z_a-z\u{C0}-\u{D6}\u{D8}-\u{F6}\u{F8}-\u{2FF}\u{370}-\u{37D}\u{37F}-\u{1FFF}\u{200C}-\u{200D}\u{2070}-\u{218F}\u{2C00}-\u{2FEF}\u{3001}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFFD}\u{10000}-\u{EFFFF}.0-9\u{B7}\u{0300}-\u{036F}\u{203F}-\u{2040}-]*)\s*$/u;
+// eslint-disable-next-line no-misleading-character-class
+const hrefRegex = /^\s*#([:A-Z_a-z\u{C0}-\u{D6}\u{D8}-\u{F6}\u{F8}-\u{2FF}\u{370}-\u{37D}\u{37F}-\u{1FFF}\u{200C}-\u{200D}\u{2070}-\u{218F}\u{2C00}-\u{2FEF}\u{3001}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFFD}\u{10000}-\u{EFFFF}][:A-Z_a-z\u{C0}-\u{D6}\u{D8}-\u{F6}\u{F8}-\u{2FF}\u{370}-\u{37D}\u{37F}-\u{1FFF}\u{200C}-\u{200D}\u{2070}-\u{218F}\u{2C00}-\u{2FEF}\u{3001}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFFD}\u{10000}-\u{EFFFF}.0-9\u{B7}\u{0300}-\u{036F}\u{203F}-\u{2040}-]*)\s*$/u;
 
 const lengthRegex = /^\s*([+-]?[0-9]+(?:[Ee][+-]?[0-9]+)?|[+-]?[0-9]*[.][0-9]+(?:[Ee][+-]?[0-9]+)?)(em|ex|px|in|cm|mm|pt|pc|%)?\s*$/;
 const viewBoxRegex = /^\s*([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)(?:\s+|\s*,\s*|(?=[+-.]))([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)(?:\s+|\s*,\s*|(?=[+-.]))([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)(?:\s+|\s*,\s*|(?=[+-.]))([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)\s*$/;
@@ -351,7 +353,8 @@ export class SvgDocument {
 							'uri' in attr &&
 							'local' in attr &&
 							'value' in attr &&
-							[SVG_NS, ''].includes(attr['uri'])
+							([SVG_NS, ''].includes(attr['uri']) ||
+								attr['name'] === 'xml:id')
 						) {
 							switch (attr['local']) {
 								case 'width':
@@ -458,7 +461,8 @@ export class SvgDocument {
 									attr instanceof Object &&
 									'uri' in attr &&
 									'local' in attr &&
-									[SVG_NS, ''].includes(attr['uri'])
+									([SVG_NS, ''].includes(attr['uri']) ||
+										attr['name'] === 'xml:id')
 								) {
 									switch (attr['local']) {
 										case 'transform':
@@ -468,7 +472,7 @@ export class SvgDocument {
 										case 'id':
 											id =
 												(attr['value'].match(idRegex) ||
-													[])[0] ?? id;
+													[])[1] ?? id;
 											break;
 									}
 								}
@@ -549,7 +553,8 @@ export class SvgDocument {
 									attr instanceof Object &&
 									'uri' in attr &&
 									'local' in attr &&
-									[SVG_NS, ''].includes(attr['uri'])
+									([SVG_NS, ''].includes(attr['uri']) ||
+										attr['name'] === 'xml:id')
 								) {
 									switch (attr['local']) {
 										case 'width':
@@ -616,7 +621,7 @@ export class SvgDocument {
 										case 'id':
 											id =
 												(attr['value'].match(idRegex) ||
-													[])[0] ?? id;
+													[])[1] ?? id;
 											break;
 									}
 								}
@@ -714,7 +719,8 @@ export class SvgDocument {
 										attr instanceof Object &&
 										'uri' in attr &&
 										'local' in attr &&
-										[SVG_NS, ''].includes(attr['uri'])
+										([SVG_NS, ''].includes(attr['uri']) ||
+											attr['name'] === 'xml:id')
 									) {
 										switch (attr['local']) {
 											case 'cx':
@@ -746,7 +752,7 @@ export class SvgDocument {
 												id =
 													(attr['value'].match(
 														idRegex,
-													) ?? [])[0] ?? id;
+													) ?? [])[1] ?? id;
 												break;
 										}
 									}
@@ -805,7 +811,8 @@ export class SvgDocument {
 										attr instanceof Object &&
 										'uri' in attr &&
 										'local' in attr &&
-										[SVG_NS, ''].includes(attr['uri'])
+										([SVG_NS, ''].includes(attr['uri']) ||
+											attr['name'] === 'xml:id')
 									) {
 										switch (attr['local']) {
 											case 'cx':
@@ -848,7 +855,7 @@ export class SvgDocument {
 												id =
 													(attr['value'].match(
 														idRegex,
-													) ?? [])[0] ?? id;
+													) ?? [])[1] ?? id;
 												break;
 										}
 									}
@@ -909,7 +916,8 @@ export class SvgDocument {
 										attr instanceof Object &&
 										'uri' in attr &&
 										'local' in attr &&
-										[SVG_NS, ''].includes(attr['uri'])
+										([SVG_NS, ''].includes(attr['uri']) ||
+											attr['name'] === 'xml:id')
 									) {
 										switch (attr['local']) {
 											case 'x1':
@@ -948,7 +956,7 @@ export class SvgDocument {
 												id =
 													(attr['value'].match(
 														idRegex,
-													) ?? [])[0] ?? id;
+													) ?? [])[1] ?? id;
 												break;
 										}
 									}
@@ -1006,7 +1014,8 @@ export class SvgDocument {
 										attr instanceof Object &&
 										'uri' in attr &&
 										'local' in attr &&
-										[SVG_NS, ''].includes(attr['uri'])
+										([SVG_NS, ''].includes(attr['uri']) ||
+											attr['name'] === 'xml:id')
 									) {
 										switch (attr['local']) {
 											case 'd':
@@ -1020,7 +1029,7 @@ export class SvgDocument {
 												id =
 													(attr['value'].match(
 														idRegex,
-													) ?? [])[0] ?? id;
+													) ?? [])[1] ?? id;
 												break;
 										}
 									}
@@ -1070,7 +1079,8 @@ export class SvgDocument {
 										attr instanceof Object &&
 										'uri' in attr &&
 										'local' in attr &&
-										[SVG_NS, ''].includes(attr['uri'])
+										([SVG_NS, ''].includes(attr['uri']) ||
+											attr['name'] === 'xml:id')
 									) {
 										switch (attr['local']) {
 											case 'points':
@@ -1085,7 +1095,7 @@ export class SvgDocument {
 												id =
 													(attr['value'].match(
 														idRegex,
-													) ?? [])[0] ?? id;
+													) ?? [])[1] ?? id;
 												break;
 										}
 									}
@@ -1137,7 +1147,8 @@ export class SvgDocument {
 										attr instanceof Object &&
 										'uri' in attr &&
 										'local' in attr &&
-										[SVG_NS, ''].includes(attr['uri'])
+										([SVG_NS, ''].includes(attr['uri']) ||
+											attr['name'] === 'xml:id')
 									) {
 										switch (attr['local']) {
 											case 'points':
@@ -1152,7 +1163,7 @@ export class SvgDocument {
 												id =
 													(attr['value'].match(
 														idRegex,
-													) ?? [])[0] ?? id;
+													) ?? [])[1] ?? id;
 												break;
 										}
 									}
@@ -1209,7 +1220,8 @@ export class SvgDocument {
 										attr instanceof Object &&
 										'uri' in attr &&
 										'local' in attr &&
-										[SVG_NS, ''].includes(attr['uri'])
+										([SVG_NS, ''].includes(attr['uri']) ||
+											attr['name'] === 'xml:id')
 									) {
 										switch (attr['local']) {
 											case 'x':
@@ -1266,7 +1278,7 @@ export class SvgDocument {
 												id =
 													(attr['value'].match(
 														idRegex,
-													) ?? [])[0] ?? id;
+													) ?? [])[1] ?? id;
 												break;
 										}
 									}
@@ -1334,7 +1346,10 @@ export class SvgDocument {
 										'local' in attr
 									) {
 										if (
-											[SVG_NS, ''].includes(attr['uri'])
+											[SVG_NS, ''].includes(
+												attr['uri'],
+											) ||
+											attr['name'] === 'xml:id'
 										) {
 											switch (attr['local']) {
 												case 'x':
@@ -1380,7 +1395,7 @@ export class SvgDocument {
 													id =
 														(attr['value'].match(
 															idRegex,
-														) ?? [])[0] ?? id;
+														) ?? [])[1] ?? id;
 													break;
 											}
 										}
@@ -1393,6 +1408,7 @@ export class SvgDocument {
 												(attr['value'].match(
 													hrefRegex,
 												) ?? [])[1] ?? href;
+											console.log({ href });
 										}
 									}
 								}

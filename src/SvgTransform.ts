@@ -123,6 +123,10 @@ export class SvgTransform {
 			𝐌[1].pow(2).plus(𝐌[3].pow(2)),
 		];
 
+		if (𝐌𝐌ᵀ[1].div(Decimal.min(𝐌𝐌ᵀ[0], 𝐌𝐌ᵀ[3])).abs().lte(ε)) {
+			𝐌𝐌ᵀ[1] = new Decimal(0);
+		}
+
 		const λ = 𝐌𝐌ᵀ[0].plus(𝐌𝐌ᵀ[3]);
 
 		const ΔΔ = Decimal.max(
@@ -140,12 +144,21 @@ export class SvgTransform {
 		}
 
 		const Δ = ΔΔ.sqrt();
-		const λ1 = λ.plus(Δ).div(2);
+		const λ1 = (() => {
+			const tmp = λ.plus(Δ).div(2);
+			return tmp.sub(𝐌𝐌ᵀ[3]).abs().div(𝐌𝐌ᵀ[3]).lte(ε) ? 𝐌𝐌ᵀ[3] : tmp;
+		})();
 		const λ2 = λ.sub(Δ).div(2);
 		const degenerate = λ2.div(λ1).lte(ε);
+
 		const φ = degenerate
 			? zero
-			: Decimal.atan2(λ1.sub(𝐌𝐌ᵀ[0]), 𝐌𝐌ᵀ[1]).div(degToRad);
+			: (𝐌𝐌ᵀ[1].gte(λ1.sub(𝐌𝐌ᵀ[3]).abs())
+					? Decimal.atan2(λ1.sub(𝐌𝐌ᵀ[0]), 𝐌𝐌ᵀ[1])
+					: Decimal.atan2(𝐌𝐌ᵀ[1], λ1.sub(𝐌𝐌ᵀ[3]))
+			  )
+					.div(degToRad)
+					.toDP(8);
 
 		return {
 			rx: degenerate ? zero : λ1.sqrt(),

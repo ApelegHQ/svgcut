@@ -39,9 +39,9 @@ const transformEllipse = (
 		ry: new Decimal(ry),
 		φ: new Decimal(φ),
 	});
-	return [result?.rx, result?.ry, result?.φ].map((v) =>
-		v instanceof Decimal ? +v.toDP(5) : v,
-	);
+	return [result?.rx, result?.ry, result?.φ]
+		.map((v) => (v instanceof Decimal ? +v.toDP(5) : v))
+		.map((v) => (v === 0 ? 0 : v));
 };
 
 describe('SvgTransform', () => {
@@ -530,12 +530,12 @@ describe('SvgTransform', () => {
 		expect(transformEllipse('rotate(-60)', 3, 2, 30)).to.deep.equal([
 			3,
 			2,
-			150,
+			-30,
 		]);
 		expect(transformEllipse('rotate(-45)', 3, 2, 30)).to.deep.equal([
 			3,
 			2,
-			165,
+			-15,
 		]);
 		expect(transformEllipse('rotate(-30)', 3, 2, 30)).to.deep.equal([
 			3,
@@ -588,35 +588,36 @@ describe('SvgTransform', () => {
 			3,
 			90,
 		]);
+
 		expect(transformEllipse('rotate(-15)', 3, 5, 30)).to.deep.equal([
 			5,
 			3,
-			105,
+			-75,
 		]);
 		expect(transformEllipse('rotate(0)  ', 3, 5, 30)).to.deep.equal([
 			5,
 			3,
-			120,
+			-60,
 		]);
 		expect(transformEllipse('rotate(+15)', 3, 5, 30)).to.deep.equal([
 			5,
 			3,
-			135,
+			-45,
 		]);
 		expect(transformEllipse('rotate(+30)', 3, 5, 30)).to.deep.equal([
 			5,
 			3,
-			150,
+			-30,
 		]);
 		expect(transformEllipse('rotate(+45)', 3, 5, 30)).to.deep.equal([
 			5,
 			3,
-			165,
+			-15,
 		]);
 		expect(transformEllipse('rotate(+60)', 3, 5, 30)).to.deep.equal([
 			5,
 			3,
-			180,
+			0,
 		]);
 	});
 
@@ -672,12 +673,12 @@ describe('SvgTransform', () => {
 		expect(transformEllipse('scale(1 1.5)', 2, 3, 30)).to.deep.equal([
 			4.27187,
 			2.10681,
-			104.02744,
+			-75.97256,
 		]);
 		expect(transformEllipse('scale(1 1.5)', 2, 3, 60)).to.deep.equal([
 			3.68941,
 			2.43941,
-			118.98778,
+			-61.01222,
 		]);
 	});
 });
