@@ -1,6 +1,18 @@
 <!-- Learn about this code on MDN: https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform -->
 
 <svg viewBox="-40 0 150 100" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <style type="text/css">
+      path, use {
+        fill:none;
+        stroke:#000000;
+        stroke-width:1px;
+        stroke-linecap:butt;
+        stroke-linejoin:miter;
+        stroke-opacity:1;
+        vector-effect: non-scaling-stroke;
+      }
+  </style>
+
   <g fill="grey"
      transform="rotate(-10 50 100)
                 translate(-36 45.5)

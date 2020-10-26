@@ -13,6 +13,18 @@
  PERFORMANCE OF THIS SOFTWARE.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="350" height="200" viewBox="0 0 350 200">
+	<style type="text/css">
+		rect, use {
+			fill:none;
+			stroke:#000000;
+			stroke-width:1px;
+			stroke-linecap:butt;
+			stroke-linejoin:miter;
+			stroke-opacity:1;
+			vector-effect: non-scaling-stroke;
+		}
+	</style>
+
 	<defs transform="rotate(25)" id="ignore">
 		<g transform="scale(2 3)" id="u">
 			<rect x="0" y="0" width="25" height="25" id="xx" transform="rotate(45)" stroke="black" />

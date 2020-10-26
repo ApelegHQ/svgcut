@@ -29,6 +29,17 @@
    viewBox="0 0 210 297"
    version="1.1"
    id="svg8">
+  <style type="text/css">
+      path, rect, circle, ellipse {
+        fill:none;
+        stroke:#000000;
+        stroke-width:1px;
+        stroke-linecap:butt;
+        stroke-linejoin:miter;
+        stroke-opacity:1;
+        vector-effect: non-scaling-stroke;
+      }
+  </style>
   <defs
      id="defs2" />
   <sodipodi:namedview

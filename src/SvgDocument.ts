@@ -990,7 +990,7 @@ export class SvgDocument {
 												x1,
 												y1,
 												x2,
-												x2,
+												y2,
 												SvgTransform.fromString(
 													transform,
 													args.CTM,
@@ -1408,7 +1408,6 @@ export class SvgDocument {
 												(attr['value'].match(
 													hrefRegex,
 												) ?? [])[1] ?? href;
-											console.log({ href });
 										}
 									}
 								}
@@ -1495,7 +1494,7 @@ export class SvgDocument {
 			this.structure.properties.viewBox
 				? `viewBox="${this.structure.properties.viewBox.minX} ${this.structure.properties.viewBox.minY} ${this.structure.properties.viewBox.width} ${this.structure.properties.viewBox.height}"`
 				: ''
-		} xmlns="${SVG_NS}"><style type="text/css">@media only screen { path{fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;} }</style><g>${
+		} xmlns="${SVG_NS}"><g>${
 			this.structure.paths.length
 				? this.structure.paths
 						.map((path) => `<path d="${path}" />`)

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<foo:svg
+   xmlns:foo="http://www.w3.org/2000/svg"
+   xmlns:bar="http://www.w3.org/1999/xlink"
+   version="1.1"
+   viewBox="0 0 279.4 215.9"
+   height="8.5in"
+   width="11in">
+  <foo:style type="text/css">
+      path, rect, ellipse, circle, polygon, polyline, line {
+        fill:none;
+        stroke:#000000;
+        stroke-width:1px;
+        stroke-linecap:butt;
+        stroke-linejoin:miter;
+        stroke-opacity:1;
+        vector-effect: non-scaling-stroke;
+      }
+  </foo:style>
+  <foo:defs>
+      <foo:rect
+         width="38.099998"
+         height="31.75"
+         x="0.001322915"
+         y="87.211021"
+         id="rect00" />
+      <foo:rect
+         y="122.93242"
+         x="84.144112"
+         height="31.75"
+         width="38.099998"
+         ry="8.8900003"
+         rx="6.3499999"
+         id="rect01" />
+      <foo:rect
+         ry="8.8900003"
+         width="38.099998"
+         height="31.75"
+         x="42.072716"
+         y="87.211021"
+         xml:id="rect02" />
+      <foo:rect
+         y="87.211021"
+         x="84.144112"
+         height="31.75"
+         width="38.099998"
+         id="👩🏾‍🎤"
+         rx="6.3499999" />
+      <foo:rect
+         rx="19.049999"
+         id="rect832"
+         width="38.099998"
+         height="31.75"
+         x="0.001322915"
+         y="122.93242"
+         ry="8.8900003" />
+      <foo:rect
+         y="122.93242"
+         x="42.072716"
+         height="31.75"
+         width="38.099998"
+         id="rect834"
+         ry="15.875"
+         rx="8.8900003" />
+      <foo:rect
+         rx="19.049999"
+         id="rect836"
+         width="38.099998"
+         height="31.75"
+         x="0.001322915"
+         y="158.65381"
+         ry="15.875" />
+      <foo:rect
+         ry="15.875"
+         y="158.65381"
+         x="84.144112"
+         height="31.75"
+         width="38.099998"
+         id="🧑🏼‍🦰" />
+      <foo:rect
+         rx="19.049999"
+         id="rect842"
+         width="38.099998"
+         height="31.75"
+         x="42.072716"
+         y="158.65381" />
+      <foo:line x1="5" x2="200" y1="100" y2="125" xml:id="line" />
+  </foo:defs>
+  <foo:g
+     transform="translate(0,-81.1)"
+     id="outer-g">
+    <foo:g
+       transform="translate(12.7,93.894868)"
+       id="rectangles">
+      <foo:use href="#rect00" />
+      <foo:use href="#rect01" />
+      <foo:use href="#rect02" />
+      <foo:use href="#👩🏾‍🎤" />
+      <foo:use href="#rect832" />
+      <foo:use href="#rect834" />
+      <foo:use href="#rect836" />
+      <foo:use href="#🧑🏼‍🦰" />
+      <foo:use href="#rect842" />
+      <foo:use href="#doesnotexist" />
+    </foo:g>
+    <foo:g
+       id="g22"
+       transform="matrix(0.99986288,0,0,1,158.9857,-51.62015)">
+      <foo:use bar:href="#anotherUndefinedId" />
+      <foo:use bar:href="#ellipse1" />
+      <foo:use bar:href="#circle14" />
+      <foo:use href="#path4571" />
+      <foo:use href="#👩🏽‍🏫" />
+      <foo:use href="#path20" />
+      <foo:use href="#path838" />
+    </foo:g>
+    <foo:use href="#line" />
+    <foo:defs>
+      <foo:ellipse
+         xml:id="ellipse1"
+         ry="19.049999"
+         rx="21.59"
+         cy="267.16916"
+         cx="87.557747" />
+      <foo:circle
+         id="circle14"
+         cx="40.408451"
+         cy="314.31793"
+         r="21.59" />
+      <foo:polygon
+         id="path4571"
+         points="40.474383 285.49933 24.567036 276.39136 24.501106 258.0612 40.34252 248.83902 56.249866 257.947 56.315766 276.27715" />
+      <foo:path
+         id="👩🏽‍🏫"
+         d="M 61.998699,220.02042 A 21.59,21.59 0 0 1 45.996602,240.87476 21.59,21.59 0 0 1 21.71121,230.81542 21.59,21.59 0 0 1 25.142264,204.75398 21.59,21.59 0 0 1 51.2037,201.32293 l -10.795001,18.69749 z" />
+      <foo:path
+         id="path20"
+         d="m 107.70149,229.54542 a 21.59,19.049999 0 0 1 -26.0817,8.37615 21.59,19.049999 0 0 1 -13.877785,-21.20915 21.59,19.049999 0 0 1 21.262,-15.742 v 19.05 z" />
+      <foo:polyline
+         id="path838"
+         points="87.623697 332.64808 71.71635 323.54011 71.65042 305.20995 87.491834 295.98777 103.39918 305.09575 103.46508 323.4259" />
+    </foo:defs>
+  </foo:g>
+</foo:svg>

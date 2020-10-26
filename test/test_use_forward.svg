@@ -13,6 +13,18 @@
  PERFORMANCE OF THIS SOFTWARE.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="350" height="200" viewBox="0 0 350 200">
+	<style type="text/css">
+		rect, use {
+			fill:none;
+			stroke:#000000;
+			stroke-width:1px;
+			stroke-linecap:butt;
+			stroke-linejoin:miter;
+			stroke-opacity:1;
+			vector-effect: non-scaling-stroke;
+		}
+	</style>
+
 	<g transform="skewY(-15)">
 		<use href=" #xx " transform="rotate(-30) translate(15 2) rotate(45) translate(2 3)" fill="black" />
 		<use href=" #x " x="15" y="2" transform="rotate(-30)" fill="red" />
