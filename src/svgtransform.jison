@@ -14,7 +14,7 @@
 %options flex
 
 %{
-	const Decimal = require('decimal.js');
+	const Decimal = require('@Exact-Realty/decimal.js-float');
 	const zero = new Decimal(0);
 	const one = new Decimal(1);
 	const degToRad = Decimal.acos(0).div(90);

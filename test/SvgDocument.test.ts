@@ -26,6 +26,7 @@ const testRender = async (
 	testName: string,
 	fileName: string,
 	strategy: Strategy,
+	usePhysicalDimensions = true,
 ) => {
 	const filePath = path.join(__dirname, fileName);
 
@@ -39,11 +40,11 @@ const testRender = async (
 					/\b(?:[a-zA-Z]+:)?(style|stroke|fill|opacity|stroke-width|stroke-linecap|stroke-opacity|vector-effect)[\s]*=[\s]*(?:"[^"]*"|'[^']*')/g,
 					'',
 				)
-				.replace(/<([a-zA-Z]+:)?style[^>]*>[^<]*<\/\1style>/g, '')
+				.replace(/<([a-zA-Z]+:)?style[^>]*>[\s\S]*?<\/\1style>/gu, '')
 				.replace(
 					/<([a-zA-Z]+:)?svg([^>]*)>/,
 					'<$1svg$2>' +
-						'<$1style type="text/css">' +
+						'<$1style type="text/css"><![CDATA[' +
 						'path, line, rect, circle, ellipse, use, polygon, polyline, g {' +
 						'fill:none;' +
 						'stroke:black;' +
@@ -53,7 +54,7 @@ const testRender = async (
 						'stroke-opacity:1;' +
 						'vector-effect: non-scaling-stroke;' +
 						'}' +
-						'</$1style>',
+						']]></$1style>',
 				),
 		);
 
@@ -65,7 +66,9 @@ const testRender = async (
 	expect(docs).to.be.an('array').that.has.lengthOf(1);
 
 	const referenceImageSrc = styleDocument(input);
-	const processedImageSrc = styleDocument(styleDocument(docs[0]));
+	const processedImageSrc = styleDocument(
+		styleDocument(docs[0].toString(usePhysicalDimensions)),
+	);
 
 	const referenceImage = await loadImage(referenceImageSrc);
 	const processedImage = await loadImage(processedImageSrc);
@@ -149,6 +152,7 @@ describe('SvgDocument', () => {
 			'arc_transform',
 			'test_arc_transform.svg',
 			Strategy.START_END,
+			false,
 		);
 	});
 
@@ -161,7 +165,7 @@ describe('SvgDocument', () => {
 	});
 
 	it('use', async () => {
-		await testRender('use', 'test_use.svg', Strategy.START_END);
+		await testRender('use', 'test_use.svg', Strategy.START_END, false);
 	});
 
 	it('use_forward', async () => {
@@ -169,6 +173,7 @@ describe('SvgDocument', () => {
 			'use_forward',
 			'test_use_forward.svg',
 			Strategy.START_END,
+			false,
 		);
 	});
 
@@ -181,6 +186,11 @@ describe('SvgDocument', () => {
 	});
 
 	it('transform', async () => {
-		await testRender('transform', 'transform.svg', Strategy.START_END);
+		await testRender(
+			'transform',
+			'transform.svg',
+			Strategy.START_END,
+			false,
+		);
 	});
 });

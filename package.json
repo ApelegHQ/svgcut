@@ -2,7 +2,8 @@
   "name": "svgcut",
   "version": "1.0.5",
   "description": "Reorder paths in an SVG file by relative proximity",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "devDependencies": {
     "@types/chai": "^4.2.14",
     "@types/mocha": "^8.0.3",
@@ -13,7 +14,7 @@
     "browserify": "^16.5.1",
     "canvas": "^2.6.1",
     "chai": "^4.2.0",
-    "decimal.js": "^10.2.0",
+    "@Exact-Realty/decimal.js-float": "^1.0.0",
     "eslint": "^7.1.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-prettier": "^3.1.3",
@@ -35,9 +36,14 @@
   "scripts": {
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lintFix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
-    "pack": "eslint . --ext .js,.jsx,.ts,.tsx && tsc && grunt",
+    "pack": "tsc --emitDeclarationOnly --declarationMap && grunt",
+    "test": "nyc -x src/**/*.spec.ts -x test/**/*.test.ts mocha -r ts-node/register src/**/*.spec.ts test/**/*.test.ts",
     "start": "npm run pack && node test/test.js",
-    "test": "nyc -x src/**/*.spec.ts -x test/**/*.test.ts mocha -r ts-node/register src/**/*.spec.ts test/**/*.test.ts"
+    "prepare": "npm run pack",
+    "prepublishOnly": "npm test && npm run lint",
+    "preversion": "npm run lint",
+    "version": "npm run lint && git add -A src",
+    "postversion": "git push && git push --tags"
   },
   "author": "Ricardo Iván Vieitez Parra",
   "license": "",

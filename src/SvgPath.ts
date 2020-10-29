@@ -29,7 +29,7 @@ import {
 } from '@generated/svgpath';
 
 import { SvgTransform } from './SvgTransform';
-import { Decimal } from 'decimal.js';
+import { Decimal } from '@Exact-Realty/decimal.js-float';
 
 const zero = new Decimal(0);
 

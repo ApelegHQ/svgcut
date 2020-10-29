@@ -12,7 +12,7 @@
  */
 
 declare module '@generated/svgpath' {
-	import { Decimal } from 'decimal.js';
+	import { Decimal } from '@Exact-Realty/decimal.js-float';
 
 	export type coordinate_pair = [Decimal, Decimal];
 	export type coordinate_pair_sequence = coordinate_pair[];

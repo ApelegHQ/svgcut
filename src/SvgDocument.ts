@@ -11,7 +11,7 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-import { Decimal } from 'decimal.js';
+import { Decimal } from '@Exact-Realty/decimal.js-float';
 import { Parser } from 'xml2js';
 
 import { SvgPath } from './SvgPath';
@@ -46,6 +46,7 @@ type SvgDocumentProperties = {
 	width: Decimal;
 	height: Decimal;
 	viewBox?: SvgViewBox;
+	preserveAspectRatio?: string;
 	version: string;
 };
 
@@ -303,7 +304,7 @@ const parseLength = (value: string, baseLength: Decimal) => {
 					scale = 16;
 					break;
 				case '%':
-					scale = baseLength.mul(length).div(100);
+					scale = baseLength.div(100);
 					break;
 			}
 		}
@@ -341,10 +342,13 @@ export class SvgDocument {
 		): SvgParseResult => {
 			if (el['$ns']['uri'] === SVG_NS) {
 				if (args === undefined && el['$ns']['local'] === 'svg') {
-					let width: Decimal = new Decimal(300),
+					let widthAttr = '100%',
+						heightAttr = '100%',
+						width: Decimal = new Decimal(300),
 						height: Decimal = new Decimal(150),
 						version = '1.1',
 						transform: string | undefined,
+						preserveAspectRatio: string | undefined,
 						viewBox: SvgViewBox | undefined;
 
 					for (const attr of Object.values(el['$'] ?? {})) {
@@ -358,14 +362,16 @@ export class SvgDocument {
 						) {
 							switch (attr['local']) {
 								case 'width':
-									width =
-										parseLength(attr['value'], width) ??
-										width;
+									widthAttr = attr['value'] ?? widthAttr;
 									break;
 								case 'height':
-									height =
-										parseLength(attr['value'], height) ??
-										height;
+									heightAttr = attr['value'] ?? heightAttr;
+									break;
+								case 'preserveAspectRatio':
+									preserveAspectRatio =
+										(attr['value'].match(
+											preserveAspectRatioRegex,
+										) ?? [])[0] ?? preserveAspectRatio;
 									break;
 								case 'viewBox':
 									{
@@ -401,6 +407,13 @@ export class SvgDocument {
 						}
 					}
 
+					width =
+						parseLength(widthAttr, viewBox?.width ?? width) ??
+						width;
+					height =
+						parseLength(heightAttr, viewBox?.height ?? height) ??
+						height;
+
 					const svgTransform = SvgTransform.fromString(transform);
 
 					const defs = {};
@@ -412,13 +425,16 @@ export class SvgDocument {
 							width: width,
 							version: version,
 							viewBox: viewBox,
+							preserveAspectRatio: viewBox
+								? preserveAspectRatio
+								: undefined,
 						},
 						render: true,
 						CTM: svgTransform,
 						defs: defs,
 					};
 
-					(el['$$'] ?? []).forEach((node) => {
+					el['$$']?.forEach((node) => {
 						const result = extractPaths(node, args_);
 						if (result.paths) {
 							paths.push(...result.paths);
@@ -1490,9 +1506,13 @@ export class SvgDocument {
 
 		return `<svg width="${width}" height="${height}" version="${
 			this.structure.properties.version
-		}" ${
+		}"${
 			this.structure.properties.viewBox
-				? `viewBox="${this.structure.properties.viewBox.minX} ${this.structure.properties.viewBox.minY} ${this.structure.properties.viewBox.width} ${this.structure.properties.viewBox.height}"`
+				? ` viewBox="${this.structure.properties.viewBox.minX} ${this.structure.properties.viewBox.minY} ${this.structure.properties.viewBox.width} ${this.structure.properties.viewBox.height}"`
+				: ''
+		}${
+			this.structure.properties.preserveAspectRatio
+				? ` preserveAspectRatio="${this.structure.properties.preserveAspectRatio}"`
 				: ''
 		} xmlns="${SVG_NS}"><g>${
 			this.structure.paths.length

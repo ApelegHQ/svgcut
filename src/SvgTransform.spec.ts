@@ -14,7 +14,7 @@
 import { expect } from 'chai';
 import 'mocha';
 
-import { Decimal } from 'decimal.js';
+import { Decimal } from '@Exact-Realty/decimal.js-float';
 
 import { SvgTransform } from './SvgTransform';
 
@@ -39,9 +39,9 @@ const transformEllipse = (
 		ry: new Decimal(ry),
 		φ: new Decimal(φ),
 	});
-	return [result?.rx, result?.ry, result?.φ]
-		.map((v) => (v instanceof Decimal ? +v.toDP(5) : v))
-		.map((v) => (v === 0 ? 0 : v));
+	return [result?.rx, result?.ry, result?.φ].map((v) =>
+		v === undefined ? undefined : +v.toDP(5) || 0,
+	);
 };
 
 describe('SvgTransform', () => {
@@ -310,10 +310,10 @@ describe('SvgTransform', () => {
 					Decimal,
 				];
 				expect(
-					transform?.apply(input).map((r) => +r.toDP(5)),
+					transform?.apply(input).map((r) => +r.toDP(5) || 0),
 				).to.deep.equal(value.absolute);
 				expect(
-					transform?.applyRelative(input).map((r) => +r.toDP(5)),
+					transform?.applyRelative(input).map((r) => +r.toDP(5) || 0),
 				).to.deep.equal(value.relative);
 			});
 		};

@@ -13,7 +13,7 @@
 
 import { SvgTransformMatrix, parse } from '@generated/svgtransform';
 
-import { Decimal } from 'decimal.js';
+import { Decimal } from '@Exact-Realty/decimal.js-float';
 
 interface Ellipse {
 	rx: Decimal;
