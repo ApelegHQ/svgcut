@@ -15,18 +15,56 @@ import { promises as fs } from 'fs';
 import * as svgcut from './index';
 
 void (async () => {
-	if (process.argv && process.argv.length !== 3) {
-		process.stderr.write(
-			`Usage: ${process.argv[0]} ${process.argv[1]} [svg file]\n`,
+	const showHelp = (isError: boolean) => {
+		const myProcess = process as typeof process & {
+			pkg?: { entrypoint?: string };
+		};
+
+		const progName =
+			'pkg' in myProcess &&
+			myProcess['pkg'] &&
+			'entrypoint' in myProcess['pkg'] &&
+			myProcess['pkg']['entrypoint'] === process.argv[1]
+				? process.argv[0]
+				: process.argv.slice(0, 2).join(' ');
+
+		(isError ? process.stderr : process.stdout).write(
+			`Usage: ${progName} [--] [input svg file] [output svg file]\n`,
 		);
-		process.exit(1);
+		process.exit(isError ? 1 : 0);
+	};
+
+	if (
+		!process.argv ||
+		process.argv.length < 2 ||
+		process.argv.length > 5 ||
+		['-h', '-?', '--help', '/h', '/?', '/help'].includes(process.argv[3])
+	) {
+		showHelp(true);
+	}
+	if (['-h', '-?', '--help', '/h', '/?', '/help'].includes(process.argv[2])) {
+		showHelp(false);
 	}
 
-	const filePath = process.argv[2];
+	const endOfOptions = process.argv[2] === '--';
 
-	const file = await fs.readFile(filePath);
+	const inputFile = process.argv[endOfOptions ? 3 : 2];
+	const outputFile = process.argv[endOfOptions ? 4 : 3];
+
+	const input =
+		!inputFile || (inputFile === '-' && !endOfOptions)
+			? await new Promise<Buffer>((resolve, reject) => {
+					const chunks: Buffer[] = [];
+					process.stdin.resume();
+					process.stdin.on('data', (chunk) => chunks.push(chunk));
+					process.stdin.on('end', () => {
+						resolve(Buffer.concat(chunks));
+					});
+					process.stdin.on('error', reject);
+			  })
+			: await fs.readFile(inputFile);
 	const result = await svgcut.reorderSvgPaths(
-		file,
+		input,
 		svgcut.Strategy.START_END,
 	);
 
@@ -34,12 +72,18 @@ void (async () => {
 		throw new Error('The number of SVG documents is not 1');
 	}
 
-	process.stdout.write('<?xml version="1.0" encoding="UTF-8"?>\n');
-	process.stdout.write(
-		'<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n',
-	);
-	process.stdout.write(result.join('\n'));
-	process.stdout.write('\n');
+	const output = [
+		'<?xml version="1.0" encoding="UTF-8"?>',
+		'<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">',
+		...result,
+		'',
+	].join('\n');
+
+	if (!outputFile || (outputFile === '-' && !endOfOptions)) {
+		process.stdout.write(output);
+	} else {
+		await fs.writeFile(outputFile, output);
+	}
 })().catch((e) => {
 	console.dir(e);
 	process.exit(1);
