@@ -25,7 +25,8 @@ declare module '@generated/svgpath' {
 	];
 	export type smooth_curveto_coordinate_sequence = coordinate_pair_double[];
 	export type coordinate_pair_double = [coordinate_pair, coordinate_pair];
-	export type quadratic_bezier_curveto_coordinate_sequence = coordinate_pair_double[];
+	export type quadratic_bezier_curveto_coordinate_sequence =
+		coordinate_pair_double[];
 	export type elliptical_arc_argument_sequence = elliptical_arc_argument[];
 	export type elliptical_arc_argument = [
 		Decimal,

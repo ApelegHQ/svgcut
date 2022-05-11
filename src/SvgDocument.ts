@@ -77,13 +77,18 @@ const XLINK_NS = 'http://www.w3.org/1999/xlink';
  * [4a]   	NameChar	   ::=   	NameStartChar | "-" | "." | [0-9] | #xB7 | [#x0300-#x036F] | [#x203F-#x2040]
  * [5]   	Name	   ::=   	NameStartChar (NameChar)*
  */
-// eslint-disable-next-line no-misleading-character-class
-const idRegex = /^\s*([:A-Z_a-z\u{C0}-\u{D6}\u{D8}-\u{F6}\u{F8}-\u{2FF}\u{370}-\u{37D}\u{37F}-\u{1FFF}\u{200C}-\u{200D}\u{2070}-\u{218F}\u{2C00}-\u{2FEF}\u{3001}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFFD}\u{10000}-\u{EFFFF}][:A-Z_a-z\u{C0}-\u{D6}\u{D8}-\u{F6}\u{F8}-\u{2FF}\u{370}-\u{37D}\u{37F}-\u{1FFF}\u{200C}-\u{200D}\u{2070}-\u{218F}\u{2C00}-\u{2FEF}\u{3001}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFFD}\u{10000}-\u{EFFFF}.0-9\u{B7}\u{0300}-\u{036F}\u{203F}-\u{2040}-]*)\s*$/u;
-// eslint-disable-next-line no-misleading-character-class
-const hrefRegex = /^\s*#([:A-Z_a-z\u{C0}-\u{D6}\u{D8}-\u{F6}\u{F8}-\u{2FF}\u{370}-\u{37D}\u{37F}-\u{1FFF}\u{200C}-\u{200D}\u{2070}-\u{218F}\u{2C00}-\u{2FEF}\u{3001}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFFD}\u{10000}-\u{EFFFF}][:A-Z_a-z\u{C0}-\u{D6}\u{D8}-\u{F6}\u{F8}-\u{2FF}\u{370}-\u{37D}\u{37F}-\u{1FFF}\u{200C}-\u{200D}\u{2070}-\u{218F}\u{2C00}-\u{2FEF}\u{3001}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFFD}\u{10000}-\u{EFFFF}.0-9\u{B7}\u{0300}-\u{036F}\u{203F}-\u{2040}-]*)\s*$/u;
 
-const lengthRegex = /^\s*([+-]?[0-9]+(?:[Ee][+-]?[0-9]+)?|[+-]?[0-9]*[.][0-9]+(?:[Ee][+-]?[0-9]+)?)(em|ex|px|in|cm|mm|pt|pc|%)?\s*$/;
-const viewBoxRegex = /^\s*([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)(?:\s+|\s*,\s*|(?=[+-.]))([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)(?:\s+|\s*,\s*|(?=[+-.]))([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)(?:\s+|\s*,\s*|(?=[+-.]))([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)\s*$/;
+const idRegex =
+	// eslint-disable-next-line no-misleading-character-class
+	/^\s*([:A-Z_a-z\u{C0}-\u{D6}\u{D8}-\u{F6}\u{F8}-\u{2FF}\u{370}-\u{37D}\u{37F}-\u{1FFF}\u{200C}-\u{200D}\u{2070}-\u{218F}\u{2C00}-\u{2FEF}\u{3001}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFFD}\u{10000}-\u{EFFFF}][:A-Z_a-z\u{C0}-\u{D6}\u{D8}-\u{F6}\u{F8}-\u{2FF}\u{370}-\u{37D}\u{37F}-\u{1FFF}\u{200C}-\u{200D}\u{2070}-\u{218F}\u{2C00}-\u{2FEF}\u{3001}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFFD}\u{10000}-\u{EFFFF}.0-9\u{B7}\u{0300}-\u{036F}\u{203F}-\u{2040}-]*)\s*$/u;
+const hrefRegex =
+	// eslint-disable-next-line no-misleading-character-class
+	/^\s*#([:A-Z_a-z\u{C0}-\u{D6}\u{D8}-\u{F6}\u{F8}-\u{2FF}\u{370}-\u{37D}\u{37F}-\u{1FFF}\u{200C}-\u{200D}\u{2070}-\u{218F}\u{2C00}-\u{2FEF}\u{3001}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFFD}\u{10000}-\u{EFFFF}][:A-Z_a-z\u{C0}-\u{D6}\u{D8}-\u{F6}\u{F8}-\u{2FF}\u{370}-\u{37D}\u{37F}-\u{1FFF}\u{200C}-\u{200D}\u{2070}-\u{218F}\u{2C00}-\u{2FEF}\u{3001}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFFD}\u{10000}-\u{EFFFF}.0-9\u{B7}\u{0300}-\u{036F}\u{203F}-\u{2040}-]*)\s*$/u;
+
+const lengthRegex =
+	/^\s*([+-]?[0-9]+(?:[Ee][+-]?[0-9]+)?|[+-]?[0-9]*[.][0-9]+(?:[Ee][+-]?[0-9]+)?)(em|ex|px|in|cm|mm|pt|pc|%)?\s*$/;
+const viewBoxRegex =
+	/^\s*([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)(?:\s+|\s*,\s*|(?=[+-.]))([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)(?:\s+|\s*,\s*|(?=[+-.]))([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)(?:\s+|\s*,\s*|(?=[+-.]))([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?)\s*$/;
 
 class UnresolvedSvgPath {
 	private _href: string;
@@ -128,7 +133,8 @@ class UnresolvedSvgPath {
 	}
 }
 
-const preserveAspectRatioRegex = /^\s*(x(Min|Mid|Max)Y(Min|Mid|Max)|none)\s*(meet|slice)?\s*$/;
+const preserveAspectRatioRegex =
+	/^\s*(x(Min|Mid|Max)Y(Min|Mid|Max)|none)\s*(meet|slice)?\s*$/;
 
 const viewBoxTransform = (
 	properties: SvgDocumentProperties,
@@ -495,9 +501,8 @@ export class SvgDocument {
 							}
 
 							if (Array.isArray(el['$$'])) {
-								const svgTransform = SvgTransform.fromString(
-									transform,
-								);
+								const svgTransform =
+									SvgTransform.fromString(transform);
 
 								const args_ = {
 									defs: args.defs,
@@ -515,12 +520,10 @@ export class SvgDocument {
 									extractPaths(node, args_),
 								);
 
-								const paths: (
-									| SvgPath
-									| UnresolvedSvgPath
-								)[] = results.flatMap(
-									(result) => result.paths ?? [],
-								);
+								const paths: (SvgPath | UnresolvedSvgPath)[] =
+									results.flatMap(
+										(result) => result.paths ?? [],
+									);
 
 								if (id) {
 									args.defs[id] = paths;
@@ -694,12 +697,10 @@ export class SvgDocument {
 									extractPaths(node, args_),
 								);
 
-								const paths: (
-									| SvgPath
-									| UnresolvedSvgPath
-								)[] = results.flatMap(
-									(result) => result.paths ?? [],
-								);
+								const paths: (SvgPath | UnresolvedSvgPath)[] =
+									results.flatMap(
+										(result) => result.paths ?? [],
+									);
 
 								// TODO: Use needs to handle width and height
 								if (id) {
@@ -775,9 +776,8 @@ export class SvgDocument {
 								}
 
 								if (id) {
-									const svgTransform = SvgTransform.fromString(
-										transform,
-									);
+									const svgTransform =
+										SvgTransform.fromString(transform);
 									const svgPath = SvgPath.fromCircle(
 										cx,
 										cy,
@@ -878,9 +878,8 @@ export class SvgDocument {
 								}
 
 								if (id) {
-									const svgTransform = SvgTransform.fromString(
-										transform,
-									);
+									const svgTransform =
+										SvgTransform.fromString(transform);
 									const svgPath = SvgPath.fromEllipse(
 										cx,
 										cy,
@@ -979,9 +978,8 @@ export class SvgDocument {
 								}
 
 								if (id) {
-									const svgTransform = SvgTransform.fromString(
-										transform,
-									);
+									const svgTransform =
+										SvgTransform.fromString(transform);
 									const svgPath = SvgPath.fromLine(
 										x1,
 										y1,
@@ -1052,9 +1050,8 @@ export class SvgDocument {
 								}
 
 								if (id) {
-									const svgTransform = SvgTransform.fromString(
-										transform,
-									);
+									const svgTransform =
+										SvgTransform.fromString(transform);
 									const svgPaths = SvgPath.fromString(
 										d,
 										svgTransform,
@@ -1118,9 +1115,8 @@ export class SvgDocument {
 								}
 
 								if (id) {
-									const svgTransform = SvgTransform.fromString(
-										transform,
-									);
+									const svgTransform =
+										SvgTransform.fromString(transform);
 									const svgPath = SvgPath.fromPolygon(
 										points,
 										svgTransform,
@@ -1186,9 +1182,8 @@ export class SvgDocument {
 								}
 
 								if (id) {
-									const svgTransform = SvgTransform.fromString(
-										transform,
-									);
+									const svgTransform =
+										SvgTransform.fromString(transform);
 									const svgPath = SvgPath.fromPolyline(
 										points,
 										svgTransform,
@@ -1301,9 +1296,8 @@ export class SvgDocument {
 								}
 
 								if (id) {
-									const svgTransform = SvgTransform.fromString(
-										transform,
-									);
+									const svgTransform =
+										SvgTransform.fromString(transform);
 									const svgPath = SvgPath.fromRect(
 										x,
 										y,

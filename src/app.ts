@@ -11,25 +11,18 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* eslint-disable @typescript-eslint/no-var-requires */
-
-const fs = require('fs/promises'),
-	path = require('path'),
-	svgcut = require('../dist/index.js');
+import { promises as fs } from 'fs';
+import * as svgcut from './index';
 
 void (async () => {
-	if (
-		process.argv &&
-		process.argv.length !== 2 &&
-		process.argv.length !== 3
-	) {
+	if (process.argv && process.argv.length !== 3) {
 		process.stderr.write(
 			`Usage: ${process.argv[0]} ${process.argv[1]} [svg file]\n`,
 		);
 		process.exit(1);
 	}
 
-	const filePath = process.argv[2] || path.join(__dirname, 'test_shapes.svg');
+	const filePath = process.argv[2];
 
 	const file = await fs.readFile(filePath);
 	const result = await svgcut.reorderSvgPaths(

@@ -113,15 +113,15 @@ const HVtoL = (tree: SvgPathTree): SvgPathTree => {
 						[x, y],
 					);
 				} else {
-					[x, y] = curvetoCoordinates[
-						curvetoCoordinates.length - 1
-					][2];
+					[x, y] =
+						curvetoCoordinates[curvetoCoordinates.length - 1][2];
 				}
 				outTree.push([command as 'C' | 'c', curvetoCoordinates]);
 				break;
 			}
 			case 'S': {
-				const smoothCurvetoCoordinates = args as smooth_curveto_coordinate_sequence;
+				const smoothCurvetoCoordinates =
+					args as smooth_curveto_coordinate_sequence;
 				if (isRelative) {
 					[x, y] = smoothCurvetoCoordinates.reduce(
 						(acc, cv) => [
@@ -131,15 +131,17 @@ const HVtoL = (tree: SvgPathTree): SvgPathTree => {
 						[x, y],
 					);
 				} else {
-					[x, y] = smoothCurvetoCoordinates[
-						smoothCurvetoCoordinates.length - 1
-					][1];
+					[x, y] =
+						smoothCurvetoCoordinates[
+							smoothCurvetoCoordinates.length - 1
+						][1];
 				}
 				outTree.push([command as 'S' | 's', smoothCurvetoCoordinates]);
 				break;
 			}
 			case 'Q': {
-				const quadraticBezierCurvetoCoordinates = args as quadratic_bezier_curveto_coordinate_sequence;
+				const quadraticBezierCurvetoCoordinates =
+					args as quadratic_bezier_curveto_coordinate_sequence;
 				if (isRelative) {
 					[x, y] = quadraticBezierCurvetoCoordinates.reduce(
 						(acc, cv) => [
@@ -149,9 +151,10 @@ const HVtoL = (tree: SvgPathTree): SvgPathTree => {
 						[x, y],
 					);
 				} else {
-					[x, y] = quadraticBezierCurvetoCoordinates[
-						quadraticBezierCurvetoCoordinates.length - 1
-					][1];
+					[x, y] =
+						quadraticBezierCurvetoCoordinates[
+							quadraticBezierCurvetoCoordinates.length - 1
+						][1];
 				}
 				outTree.push([
 					command as 'Q' | 'q',
@@ -173,7 +176,8 @@ const HVtoL = (tree: SvgPathTree): SvgPathTree => {
 				break;
 			}
 			case 'A': {
-				const ellipticalArcArguments = args as elliptical_arc_argument_sequence;
+				const ellipticalArcArguments =
+					args as elliptical_arc_argument_sequence;
 				if (isRelative) {
 					[x, y] = ellipticalArcArguments.reduce(
 						(acc, cv) => [
@@ -183,9 +187,10 @@ const HVtoL = (tree: SvgPathTree): SvgPathTree => {
 						[x, y],
 					);
 				} else {
-					[x, y] = ellipticalArcArguments[
-						ellipticalArcArguments.length - 1
-					][5];
+					[x, y] =
+						ellipticalArcArguments[
+							ellipticalArcArguments.length - 1
+						][5];
 				}
 				outTree.push([command as 'A' | 'a', ellipticalArcArguments]);
 				break;
@@ -208,129 +213,122 @@ const transformTree = (
 		tree = HVtoL(tree);
 	}
 
-	return tree.map(
-		([command, args]): drawto_command => {
-			const command_ = command.toUpperCase();
-			const isRelative = command !== command_;
+	return tree.map(([command, args]): drawto_command => {
+		const command_ = command.toUpperCase();
+		const isRelative = command !== command_;
 
-			switch (command_) {
-				case 'M':
-					return [
-						command as 'M' | 'm',
-						(args as coordinate_pair_sequence).map((c, i) =>
-							isRelative && i > 0
-								? transform.applyRelative(c)
-								: transform.apply(c),
-						),
-					];
-				case 'L':
-					return [
-						command as 'L' | 'l',
-						(args as coordinate_pair_sequence).map((c) =>
+		switch (command_) {
+			case 'M':
+				return [
+					command as 'M' | 'm',
+					(args as coordinate_pair_sequence).map((c, i) =>
+						isRelative && i > 0
+							? transform.applyRelative(c)
+							: transform.apply(c),
+					),
+				];
+			case 'L':
+				return [
+					command as 'L' | 'l',
+					(args as coordinate_pair_sequence).map((c) =>
+						isRelative
+							? transform.applyRelative(c)
+							: transform.apply(c),
+					),
+				];
+			case 'T':
+				return [
+					command as 'T' | 't',
+					(args as coordinate_pair_sequence).map((c) =>
+						isRelative
+							? transform.applyRelative(c)
+							: transform.apply(c),
+					),
+				];
+			case 'H':
+				return [
+					command as 'H' | 'h',
+					(args as coordinate_sequence).map(
+						(c) =>
+							(isRelative
+								? transform.applyRelative([c, zero])
+								: transform.apply([c, zero]))[0],
+					),
+				];
+			case 'V':
+				return [
+					command as 'V' | 'v',
+					(args as coordinate_sequence).map(
+						(c) =>
+							(isRelative
+								? transform.applyRelative([zero, c])
+								: transform.apply([zero, c]))[1],
+					),
+				];
+			case 'Z':
+				return [command as 'Z' | 'z'];
+			case 'C':
+				return [
+					command as 'C' | 'c',
+					(args as curveto_coordinate_sequence).map(
+						(cs: coordinate_pair_triplet) =>
+							cs.map((c) =>
+								isRelative
+									? transform.applyRelative(c)
+									: transform.apply(c),
+							) as coordinate_pair_triplet,
+					),
+				];
+			case 'S':
+				return [
+					command as 'S' | 's',
+					(args as smooth_curveto_coordinate_sequence).map(
+						(cs: coordinate_pair_double) =>
+							cs.map((c) =>
+								isRelative
+									? transform.applyRelative(c)
+									: transform.apply(c),
+							) as coordinate_pair_double,
+					),
+				];
+			case 'Q':
+				return [
+					command as 'Q' | 'q',
+					(args as quadratic_bezier_curveto_coordinate_sequence).map(
+						(cs: coordinate_pair_double) =>
+							cs.map((c) =>
+								isRelative
+									? transform.applyRelative(c)
+									: transform.apply(c),
+							) as coordinate_pair_double,
+					),
+				];
+			case 'A':
+				return [
+					command as 'A' | 'a',
+					(args as elliptical_arc_argument_sequence).map((arc) => {
+						const ellipse = transform.applyEllipse({
+							rx: arc[0],
+							ry: arc[1],
+							φ: arc[2],
+						});
+
+						return [
+							ellipse.rx,
+							ellipse.ry,
+							ellipse.φ,
+							arc[3],
+							!(+arc[4] ^ +transform.orientationPreserving),
 							isRelative
-								? transform.applyRelative(c)
-								: transform.apply(c),
-						),
-					];
-				case 'T':
-					return [
-						command as 'T' | 't',
-						(args as coordinate_pair_sequence).map((c) =>
-							isRelative
-								? transform.applyRelative(c)
-								: transform.apply(c),
-						),
-					];
-				case 'H':
-					return [
-						command as 'H' | 'h',
-						(args as coordinate_sequence).map(
-							(c) =>
-								(isRelative
-									? transform.applyRelative([c, zero])
-									: transform.apply([c, zero]))[0],
-						),
-					];
-				case 'V':
-					return [
-						command as 'V' | 'v',
-						(args as coordinate_sequence).map(
-							(c) =>
-								(isRelative
-									? transform.applyRelative([zero, c])
-									: transform.apply([zero, c]))[1],
-						),
-					];
-				case 'Z':
-					return [command as 'Z' | 'z'];
-				case 'C':
-					return [
-						command as 'C' | 'c',
-						(args as curveto_coordinate_sequence).map(
-							(cs: coordinate_pair_triplet) =>
-								cs.map((c) =>
-									isRelative
-										? transform.applyRelative(c)
-										: transform.apply(c),
-								) as coordinate_pair_triplet,
-						),
-					];
-				case 'S':
-					return [
-						command as 'S' | 's',
-						(args as smooth_curveto_coordinate_sequence).map(
-							(cs: coordinate_pair_double) =>
-								cs.map((c) =>
-									isRelative
-										? transform.applyRelative(c)
-										: transform.apply(c),
-								) as coordinate_pair_double,
-						),
-					];
-				case 'Q':
-					return [
-						command as 'Q' | 'q',
-						(args as quadratic_bezier_curveto_coordinate_sequence).map(
-							(cs: coordinate_pair_double) =>
-								cs.map((c) =>
-									isRelative
-										? transform.applyRelative(c)
-										: transform.apply(c),
-								) as coordinate_pair_double,
-						),
-					];
-				case 'A':
-					return [
-						command as 'A' | 'a',
-						(args as elliptical_arc_argument_sequence).map(
-							(arc) => {
-								const ellipse = transform.applyEllipse({
-									rx: arc[0],
-									ry: arc[1],
-									φ: arc[2],
-								});
+								? transform.applyRelative(arc[5])
+								: transform.apply(arc[5]),
+						];
+					}),
+				];
+		}
 
-								return [
-									ellipse.rx,
-									ellipse.ry,
-									ellipse.φ,
-									arc[3],
-									!(
-										+arc[4] ^
-										+transform.orientationPreserving
-									),
-									isRelative
-										? transform.applyRelative(arc[5])
-										: transform.apply(arc[5]),
-								];
-							},
-						),
-					];
-			}
-
-			return ['Z'];
-		},
-	);
+		return ['Z'];
+	});
 };
 
 export class SvgPath {
@@ -435,7 +433,8 @@ export class SvgPath {
 					break;
 				case 'C':
 					if (isRelative) {
-						const curvetoCoordinates: curveto_coordinate_sequence = [];
+						const curvetoCoordinates: curveto_coordinate_sequence =
+							[];
 						for (const curvetoCoordinate of args as curveto_coordinate_sequence) {
 							const coordPair1: [Decimal, Decimal] = [
 								curvetoCoordinate[0][0].plus(x),
@@ -455,7 +454,8 @@ export class SvgPath {
 						}
 						absTree.push([command, curvetoCoordinates]);
 					} else {
-						const curvetoCoordinates = args as curveto_coordinate_sequence;
+						const curvetoCoordinates =
+							args as curveto_coordinate_sequence;
 						x =
 							curvetoCoordinates[
 								curvetoCoordinates.length - 1
@@ -469,7 +469,8 @@ export class SvgPath {
 					break;
 				case 'S':
 					if (isRelative) {
-						const smoothCurvetoCoordinates: smooth_curveto_coordinate_sequence = [];
+						const smoothCurvetoCoordinates: smooth_curveto_coordinate_sequence =
+							[];
 						for (const smoothCurvetoCoordinate of args as smooth_curveto_coordinate_sequence) {
 							const coordPair2: [Decimal, Decimal] = [
 								smoothCurvetoCoordinate[0][0].plus(x),
@@ -481,7 +482,8 @@ export class SvgPath {
 						}
 						absTree.push([command, smoothCurvetoCoordinates]);
 					} else {
-						const smoothCurvetoCoordinates = args as smooth_curveto_coordinate_sequence;
+						const smoothCurvetoCoordinates =
+							args as smooth_curveto_coordinate_sequence;
 						x =
 							smoothCurvetoCoordinates[
 								smoothCurvetoCoordinates.length - 1
@@ -495,7 +497,8 @@ export class SvgPath {
 					break;
 				case 'Q':
 					if (isRelative) {
-						const quadraticBezierCurvetoCoordinates: quadratic_bezier_curveto_coordinate_sequence = [];
+						const quadraticBezierCurvetoCoordinates: quadratic_bezier_curveto_coordinate_sequence =
+							[];
 						for (const quadraticBezierCurvetoCoordinate of args as quadratic_bezier_curveto_coordinate_sequence) {
 							const coordPair1: [Decimal, Decimal] = [
 								quadraticBezierCurvetoCoordinate[0][0].plus(x),
@@ -513,7 +516,8 @@ export class SvgPath {
 							quadraticBezierCurvetoCoordinates,
 						]);
 					} else {
-						const quadraticBezierCurvetoCoordinates = args as quadratic_bezier_curveto_coordinate_sequence;
+						const quadraticBezierCurvetoCoordinates =
+							args as quadratic_bezier_curveto_coordinate_sequence;
 						x =
 							quadraticBezierCurvetoCoordinates[
 								quadraticBezierCurvetoCoordinates.length - 1
@@ -546,7 +550,8 @@ export class SvgPath {
 					break;
 				case 'A':
 					if (isRelative) {
-						const ellipticalArcArguments: elliptical_arc_argument_sequence = [];
+						const ellipticalArcArguments: elliptical_arc_argument_sequence =
+							[];
 						for (const ellipticalArcArgument of args as elliptical_arc_argument_sequence) {
 							x = x.plus(ellipticalArcArgument[5][0]);
 							y = y.plus(ellipticalArcArgument[5][1]);
@@ -560,7 +565,8 @@ export class SvgPath {
 						}
 						absTree.push([command, ellipticalArcArguments]);
 					} else {
-						const ellipticalArcArguments = args as elliptical_arc_argument_sequence;
+						const ellipticalArcArguments =
+							args as elliptical_arc_argument_sequence;
 						x =
 							ellipticalArcArguments[
 								ellipticalArcArguments.length - 1
@@ -610,9 +616,9 @@ export class SvgPath {
 					}
 
 					if (isRelative) {
-						const extraArgs: coordinate_pair_sequence = (args as coordinate_pair_sequence).slice(
-							1,
-						);
+						const extraArgs: coordinate_pair_sequence = (
+							args as coordinate_pair_sequence
+						).slice(1);
 
 						x = x.plus((args as coordinate_pair_sequence)[0][0]);
 						y = y.plus((args as coordinate_pair_sequence)[0][1]);
@@ -686,10 +692,12 @@ export class SvgPath {
 							y = y.plus(curvetoCoordinate[2][1]);
 						}
 					} else {
-						const curvetoCoordinates = args as curveto_coordinate_sequence;
-						[x, y] = curvetoCoordinates[
-							curvetoCoordinates.length - 1
-						][2];
+						const curvetoCoordinates =
+							args as curveto_coordinate_sequence;
+						[x, y] =
+							curvetoCoordinates[
+								curvetoCoordinates.length - 1
+							][2];
 					}
 					subpath.push(draw);
 					break;
@@ -700,10 +708,12 @@ export class SvgPath {
 							y = y.plus(smoothCurvetoCoordinate[1][1]);
 						}
 					} else {
-						const smoothCurvetoCoordinates = args as smooth_curveto_coordinate_sequence;
-						[x, y] = smoothCurvetoCoordinates[
-							smoothCurvetoCoordinates.length - 1
-						][1];
+						const smoothCurvetoCoordinates =
+							args as smooth_curveto_coordinate_sequence;
+						[x, y] =
+							smoothCurvetoCoordinates[
+								smoothCurvetoCoordinates.length - 1
+							][1];
 					}
 					subpath.push(draw);
 					break;
@@ -714,10 +724,12 @@ export class SvgPath {
 							y = y.plus(quadraticBezierCurvetoCoordinate[1][1]);
 						}
 					} else {
-						const quadraticBezierCurvetoCoordinates = args as quadratic_bezier_curveto_coordinate_sequence;
-						[x, y] = quadraticBezierCurvetoCoordinates[
-							quadraticBezierCurvetoCoordinates.length - 1
-						][1];
+						const quadraticBezierCurvetoCoordinates =
+							args as quadratic_bezier_curveto_coordinate_sequence;
+						[x, y] =
+							quadraticBezierCurvetoCoordinates[
+								quadraticBezierCurvetoCoordinates.length - 1
+							][1];
 					}
 					subpath.push(draw);
 					break;
@@ -740,10 +752,12 @@ export class SvgPath {
 							y = y.plus(ellipticalArcArgument[5][1]);
 						}
 					} else {
-						const ellipticalArcArguments = args as elliptical_arc_argument_sequence;
-						[x, y] = ellipticalArcArguments[
-							ellipticalArcArguments.length - 1
-						][5];
+						const ellipticalArcArguments =
+							args as elliptical_arc_argument_sequence;
+						[x, y] =
+							ellipticalArcArguments[
+								ellipticalArcArguments.length - 1
+							][5];
 					}
 					subpath.push(draw);
 					break;
@@ -777,15 +791,19 @@ export class SvgPath {
 					case 'C':
 					case 'S':
 					case 'Q':
-						return `${command}${(args as
-							| curveto_coordinate_sequence
-							| smooth_curveto_coordinate_sequence
-							| quadratic_bezier_curveto_coordinate_sequence)
+						return `${command}${(
+							args as
+								| curveto_coordinate_sequence
+								| smooth_curveto_coordinate_sequence
+								| quadratic_bezier_curveto_coordinate_sequence
+						)
 							.flat()
 							.flat()
 							.join(' ')}`;
 					case 'A':
-						return `${command}${(args as elliptical_arc_argument_sequence)
+						return `${command}${(
+							args as elliptical_arc_argument_sequence
+						)
 							.flat()
 							.flat()
 							.map((v) => (Object(v) instanceof Boolean ? +v : v))

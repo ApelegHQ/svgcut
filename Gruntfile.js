@@ -28,7 +28,7 @@ module.exports = (grunt) => {
 			},
 		},
 		browserify: {
-			dist: {
+			lib: {
 				files: {
 					'dist/index.js': ['./src/index.ts'],
 				},
@@ -44,12 +44,34 @@ module.exports = (grunt) => {
 					},
 				},
 			},
+			app: {
+				files: {
+					'dist/app.js': ['./src/app.ts'],
+				},
+				options: {
+					plugin: [
+						'tsify',
+						process.env.NODE_ENV === 'production' ? 'tinyify' : '',
+					].filter((p) => !!p),
+					browserifyOptions: {
+						node: true,
+						debug: true,
+						standalone: 'xx',
+					},
+				},
+			},
 		},
 		exorcise: {
-			dist: {
+			lib: {
 				options: {},
 				files: {
 					'dist/index.js.map': ['dist/index.js'],
+				},
+			},
+			app: {
+				options: {},
+				files: {
+					'dist/app.js.map': ['dist/app.js'],
 				},
 			},
 		},
@@ -61,7 +83,9 @@ module.exports = (grunt) => {
 
 	grunt.registerTask('default', [
 		'jison',
-		'browserify:dist',
-		'exorcise:dist',
+		'browserify:lib',
+		'exorcise:lib',
+		'browserify:app',
+		'exorcise:app',
 	]);
 };

@@ -1,0 +1,22 @@
+diff --git a/node_modules/tinyify/index.js b/node_modules/tinyify/index.js
+index 41c00fd..3cc82ea 100644
+--- a/node_modules/tinyify/index.js
++++ b/node_modules/tinyify/index.js
+@@ -10,7 +10,7 @@ var uglifyify = require('uglifyify')
+ function makeUglifyOptions (debug) {
+   var uglifyOpts = {
+     output: {
+-      ascii_only: true
++      ascii_only: false
+     },
+     mangle: {
+       safari10: true
+@@ -47,7 +47,7 @@ module.exports = function (b, opts) {
+     // No need to mangle here, will do that at the end.
+     mangle: false,
+     output: {
+-      ascii_only: true
++      ascii_only: false
+     }
+   })
+ 

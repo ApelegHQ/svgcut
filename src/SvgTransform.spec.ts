@@ -84,24 +84,14 @@ describe('SvgTransform', () => {
 	it('SvgTransform.IDENTITY.catenate(SvgTransform.IDENTITY) should return [1, 0, 0, 1, 0, 0]', () => {
 		const result = SvgTransform.IDENTITY.catenate(SvgTransform.IDENTITY);
 		expect(extractMatrixValues(result?.toString())).to.deep.equal([
-			1,
-			0,
-			0,
-			1,
-			0,
-			0,
+			1, 0, 0, 1, 0, 0,
 		]);
 	});
 
 	it('SvgTransform.catenate(SvgTransform.IDENTITY, undefined) should return [1, 0, 0, 1, 0, 0]', () => {
 		const result = SvgTransform.catenate(SvgTransform.IDENTITY, undefined);
 		expect(extractMatrixValues(result?.toString())).to.deep.equal([
-			1,
-			0,
-			0,
-			1,
-			0,
-			0,
+			1, 0, 0, 1, 0, 0,
 		]);
 	});
 
@@ -113,12 +103,7 @@ describe('SvgTransform', () => {
 		expect(rotate).not.to.be.undefined;
 		expect(rotateAndTranslate).not.to.be.undefined;
 		expect(extractMatrixValues(rotate?.toString())).to.deep.equal([
-			0.866025,
-			0.5,
-			-0.5,
-			0.866025,
-			57.495536,
-			-36.576261,
+			0.866025, 0.5, -0.5, 0.866025, 57.495536, -36.576261,
 		]);
 		expect(
 			extractMatrixValues(rotateAndTranslate?.toString()),
@@ -131,20 +116,10 @@ describe('SvgTransform', () => {
 		expect(scaleSingleArg).not.to.be.undefined;
 		expect(scaleTwoArgs).not.to.be.undefined;
 		expect(extractMatrixValues(scaleSingleArg?.toString())).to.deep.equal([
-			11,
-			0,
-			0,
-			11,
-			0,
-			0,
+			11, 0, 0, 11, 0, 0,
 		]);
 		expect(extractMatrixValues(scaleTwoArgs?.toString())).to.deep.equal([
-			11,
-			0,
-			0,
-			11,
-			0,
-			0,
+			11, 0, 0, 11, 0, 0,
 		]);
 	});
 
@@ -156,9 +131,9 @@ describe('SvgTransform', () => {
 		expect(
 			extractMatrixValues(translateSingleArg?.toString()),
 		).to.deep.equal([1, 0, 0, 1, 17, 0]);
-		expect(
-			extractMatrixValues(translateTwoArgs?.toString()),
-		).to.deep.equal([1, 0, 0, 1, 17, 0]);
+		expect(extractMatrixValues(translateTwoArgs?.toString())).to.deep.equal(
+			[1, 0, 0, 1, 17, 0],
+		);
 	});
 
 	it(".fromString('', SvgTransform.IDENTITY) should return SvgTransform.IDENTITY", () => {
@@ -187,12 +162,7 @@ describe('SvgTransform', () => {
 			expect(transform?.orientationPreserving).to.be.true;
 
 			expect(extractMatrixValues(transform?.toString())).to.deep.equal([
-				0.565685,
-				0.565685,
-				-0.41411,
-				0.71726,
-				50,
-				50,
+				0.565685, 0.565685, -0.41411, 0.71726, 50, 50,
 			]);
 		});
 	});
@@ -233,12 +203,7 @@ describe('SvgTransform', () => {
 		expect(inverseTransform).not.to.be.undefined;
 
 		expect(extractMatrixValues(transform?.toString())).to.deep.equal([
-			1,
-			0,
-			0,
-			1,
-			0,
-			0,
+			1, 0, 0, 1, 0, 0,
 		]);
 	});
 
@@ -262,36 +227,16 @@ describe('SvgTransform', () => {
 		expect(inner?.orientationPreserving).to.be.true;
 
 		expect(extractMatrixValues(outer?.toString())).to.deep.equal([
-			1,
-			0,
-			0,
-			1,
-			50,
-			15,
+			1, 0, 0, 1, 50, 15,
 		]);
 		expect(extractMatrixValues(t1?.toString())).to.deep.equal([
-			0.965926,
-			0.258819,
-			-0.258819,
-			0.965926,
-			50,
-			15,
+			0.965926, 0.258819, -0.258819, 0.965926, 50, 15,
 		]);
 		expect(extractMatrixValues(t2?.toString())).to.deep.equal([
-			0.965926,
-			0.258819,
-			-0.258819,
-			0.965926,
-			50,
-			15,
+			0.965926, 0.258819, -0.258819, 0.965926, 50, 15,
 		]);
 		expect(extractMatrixValues(inner?.toString())).to.deep.equal([
-			0.965926,
-			0.258819,
-			-0.258819,
-			0.965926,
-			59.659258,
-			17.58819,
+			0.965926, 0.258819, -0.258819, 0.965926, 59.659258, 17.58819,
 		]);
 	});
 
@@ -528,114 +473,72 @@ describe('SvgTransform', () => {
 
 	it('transform ellipse rotation', () => {
 		expect(transformEllipse('rotate(-60)', 3, 2, 30)).to.deep.equal([
-			3,
-			2,
-			-30,
+			3, 2, -30,
 		]);
 		expect(transformEllipse('rotate(-45)', 3, 2, 30)).to.deep.equal([
-			3,
-			2,
-			-15,
+			3, 2, -15,
 		]);
 		expect(transformEllipse('rotate(-30)', 3, 2, 30)).to.deep.equal([
-			3,
-			2,
-			0,
+			3, 2, 0,
 		]);
 		expect(transformEllipse('rotate(-15)', 3, 2, 30)).to.deep.equal([
-			3,
-			2,
-			15,
+			3, 2, 15,
 		]);
 		expect(transformEllipse('rotate(0)  ', 3, 2, 30)).to.deep.equal([
-			3,
-			2,
-			30,
+			3, 2, 30,
 		]);
 		expect(transformEllipse('rotate(+15)', 3, 2, 30)).to.deep.equal([
-			3,
-			2,
-			45,
+			3, 2, 45,
 		]);
 		expect(transformEllipse('rotate(+30)', 3, 2, 30)).to.deep.equal([
-			3,
-			2,
-			60,
+			3, 2, 60,
 		]);
 		expect(transformEllipse('rotate(+45)', 3, 2, 30)).to.deep.equal([
-			3,
-			2,
-			75,
+			3, 2, 75,
 		]);
 		expect(transformEllipse('rotate(+60)', 3, 2, 30)).to.deep.equal([
-			3,
-			2,
-			90,
+			3, 2, 90,
 		]);
 
 		expect(transformEllipse('rotate(-60)', 3, 5, 30)).to.deep.equal([
-			5,
-			3,
-			60,
+			5, 3, 60,
 		]);
 		expect(transformEllipse('rotate(-45)', 3, 5, 30)).to.deep.equal([
-			5,
-			3,
-			75,
+			5, 3, 75,
 		]);
 		expect(transformEllipse('rotate(-30)', 3, 5, 30)).to.deep.equal([
-			5,
-			3,
-			90,
+			5, 3, 90,
 		]);
 
 		expect(transformEllipse('rotate(-15)', 3, 5, 30)).to.deep.equal([
-			5,
-			3,
-			-75,
+			5, 3, -75,
 		]);
 		expect(transformEllipse('rotate(0)  ', 3, 5, 30)).to.deep.equal([
-			5,
-			3,
-			-60,
+			5, 3, -60,
 		]);
 		expect(transformEllipse('rotate(+15)', 3, 5, 30)).to.deep.equal([
-			5,
-			3,
-			-45,
+			5, 3, -45,
 		]);
 		expect(transformEllipse('rotate(+30)', 3, 5, 30)).to.deep.equal([
-			5,
-			3,
-			-30,
+			5, 3, -30,
 		]);
 		expect(transformEllipse('rotate(+45)', 3, 5, 30)).to.deep.equal([
-			5,
-			3,
-			-15,
+			5, 3, -15,
 		]);
 		expect(transformEllipse('rotate(+60)', 3, 5, 30)).to.deep.equal([
-			5,
-			3,
-			0,
+			5, 3, 0,
 		]);
 	});
 
 	it('transform ellipse degenerate', () => {
 		expect(transformEllipse('scale(1 1e-8)', 2, 2, 45)).to.deep.equal([
-			0,
-			0,
-			0,
+			0, 0, 0,
 		]);
 		expect(transformEllipse('scale(1e-8 1)', 3, 5, 90)).to.deep.equal([
-			0,
-			0,
-			0,
+			0, 0, 0,
 		]);
 		expect(transformEllipse('scale(1 1e-8)', 7, 5, -90)).to.deep.equal([
-			0,
-			0,
-			0,
+			0, 0, 0,
 		]);
 	});
 
@@ -650,35 +553,23 @@ describe('SvgTransform', () => {
 
 		// Ellipse scale transform
 		expect(transformEllipse('scale(1 1.5)', 3, 2, 0)).to.deep.equal([
-			3,
-			3,
-			0,
+			3, 3, 0,
 		]);
 		expect(transformEllipse('scale(1 1.5)', 3, 2, 30)).to.deep.equal([
-			3.68941,
-			2.43941,
-			61.01222,
+			3.68941, 2.43941, 61.01222,
 		]);
 		expect(transformEllipse('scale(1 1.5)', 3, 2, 60)).to.deep.equal([
-			4.27187,
-			2.10681,
-			75.97256,
+			4.27187, 2.10681, 75.97256,
 		]);
 
 		expect(transformEllipse('scale(1 1.5)', 2, 3, 0)).to.deep.equal([
-			4.5,
-			2,
-			90,
+			4.5, 2, 90,
 		]);
 		expect(transformEllipse('scale(1 1.5)', 2, 3, 30)).to.deep.equal([
-			4.27187,
-			2.10681,
-			-75.97256,
+			4.27187, 2.10681, -75.97256,
 		]);
 		expect(transformEllipse('scale(1 1.5)', 2, 3, 60)).to.deep.equal([
-			3.68941,
-			2.43941,
-			-61.01222,
+			3.68941, 2.43941, -61.01222,
 		]);
 	});
 });

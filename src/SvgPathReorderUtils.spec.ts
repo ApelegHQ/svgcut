@@ -76,7 +76,7 @@ describe('SvgPathReorderUtils', () => {
 
 	it('error on invalid strategy', () => {
 		expect(() =>
-			sortPathsByRelativePosition([], ('x' as unknown) as Strategy),
+			sortPathsByRelativePosition([], 'x' as unknown as Strategy),
 		).to.throw();
 	});
 });

@@ -344,8 +344,7 @@ describe('SvgPath', () => {
 		expect(result.start.map((v) => +v.toDP(6))).to.deep.equal([2, 3]);
 		expect(result.end.map((v) => +v.toDP(6))).to.deep.equal([11, 13]);
 		expect(result.centroid.map((v) => +v.toDP(6))).to.deep.equal([
-			6,
-			7.666667,
+			6, 7.666667,
 		]);
 	});
 
@@ -402,8 +401,7 @@ describe('SvgPath', () => {
 		expect(result.start.map((v) => +v.toDP(6))).to.deep.equal([2, 3]);
 		expect(result.end.map((v) => +v.toDP(6))).to.deep.equal([19, 22]);
 		expect(result.centroid.map((v) => +v.toDP(6))).to.deep.equal([
-			10.5,
-			12.5,
+			10.5, 12.5,
 		]);
 	});
 
@@ -427,8 +425,7 @@ describe('SvgPath', () => {
 		expect(result.start.map((v) => +v.toDP(6))).to.deep.equal([2, 3]);
 		expect(result.end.map((v) => +v.toDP(6))).to.deep.equal([13, 16]);
 		expect(result.centroid.map((v) => +v.toDP(6))).to.deep.equal([
-			7.5,
-			9.5,
+			7.5, 9.5,
 		]);
 	});
 
@@ -452,8 +449,7 @@ describe('SvgPath', () => {
 		expect(result.start.map((v) => +v.toDP(6))).to.deep.equal([2, 3]);
 		expect(result.end.map((v) => +v.toDP(6))).to.deep.equal([13, 16]);
 		expect(result.centroid.map((v) => +v.toDP(6))).to.deep.equal([
-			7.5,
-			9.5,
+			7.5, 9.5,
 		]);
 	});
 
@@ -488,8 +484,7 @@ describe('SvgPath', () => {
 		expect(result.start.map((v) => +v.toDP(6))).to.deep.equal([2, 3]);
 		expect(result.end.map((v) => +v.toDP(6))).to.deep.equal([11, 13]);
 		expect(result.centroid.map((v) => +v.toDP(6))).to.deep.equal([
-			6,
-			7.666667,
+			6, 7.666667,
 		]);
 	});
 
@@ -502,8 +497,7 @@ describe('SvgPath', () => {
 		expect(result.start.map((v) => +v.toDP(6))).to.deep.equal([2, 3]);
 		expect(result.end.map((v) => +v.toDP(6))).to.deep.equal([7, 10]);
 		expect(result.centroid.map((v) => +v.toDP(6))).to.deep.equal([
-			4.5,
-			6.5,
+			4.5, 6.5,
 		]);
 	});
 
@@ -537,13 +531,11 @@ describe('SvgPath', () => {
 		pathEquals('M 5.875 3.25 14.625 7.75 Z', result);
 
 		expect(result.start.map((d) => +d.toDP(6))).to.deep.equal([
-			5.875,
-			3.25,
+			5.875, 3.25,
 		]);
 		expect(result.end.map((d) => +d.toDP(6))).to.deep.equal([5.875, 3.25]);
 		expect(result.centroid.map((d) => +d.toDP(6))).to.deep.equal([
-			10.25,
-			5.5,
+			10.25, 5.5,
 		]);
 	});
 
@@ -566,13 +558,11 @@ describe('SvgPath', () => {
 		pathEquals('M 5.875 3.25 14.625 7.75', result);
 
 		expect(result.start.map((d) => +d.toDP(6))).to.deep.equal([
-			5.875,
-			3.25,
+			5.875, 3.25,
 		]);
 		expect(result.end.map((d) => +d.toDP(6))).to.deep.equal([14.625, 7.75]);
 		expect(result.centroid.map((d) => +d.toDP(6))).to.deep.equal([
-			10.25,
-			5.5,
+			10.25, 5.5,
 		]);
 	});
 
@@ -603,16 +593,13 @@ describe('SvgPath', () => {
 		pathEquals('M 9.227241 3.598076 22.235572 8.562178', result);
 
 		expect(result.start.map((d) => +d.toDP(6))).to.deep.equal([
-			9.227241,
-			3.598076,
+			9.227241, 3.598076,
 		]);
 		expect(result.end.map((d) => +d.toDP(6))).to.deep.equal([
-			22.235572,
-			8.562178,
+			22.235572, 8.562178,
 		]);
 		expect(result.centroid.map((d) => +d.toDP(6))).to.deep.equal([
-			15.731406,
-			6.080127,
+			15.731406, 6.080127,
 		]);
 	});
 
@@ -791,15 +778,13 @@ describe('SvgPath', () => {
 		expect(result.start.map((v) => +v.toDP(6))).to.deep.equal([19, 31]);
 		expect(result.end.map((v) => +v.toDP(6))).to.deep.equal([19, 31]);
 		expect(result.centroid.map((v) => +v.toDP(6))).to.deep.equal([
-			24.75,
-			36.75,
+			24.75, 36.75,
 		]);
 
 		expect(result.start.map((v) => +v.toDP(6))).to.deep.equal([19, 31]);
 		expect(result.end.map((v) => +v.toDP(6))).to.deep.equal([19, 31]);
 		expect(result.centroid.map((v) => +v.toDP(6))).to.deep.equal([
-			24.75,
-			36.75,
+			24.75, 36.75,
 		]);
 	});
 
@@ -865,8 +850,7 @@ describe('SvgPath', () => {
 		expect(paths[0].start.map((v) => +v.toDP(6))).to.deep.equal([13, 17]);
 		expect(paths[0].end.map((v) => +v.toDP(6))).to.deep.equal([337, 347]);
 		expect(paths[0].centroid.map((v) => +v.toDP(6))).to.deep.equal([
-			163,
-			165,
+			163, 165,
 		]);
 	});
 
@@ -884,8 +868,7 @@ describe('SvgPath', () => {
 		expect(result.start.map((v) => +v.toDP(6))).to.deep.equal([-3, -27]);
 		expect(result.end.map((v) => +v.toDP(6))).to.deep.equal([-327, -357]);
 		expect(result.centroid.map((v) => +v.toDP(6))).to.deep.equal([
-			-153,
-			-175,
+			-153, -175,
 		]);
 	});
 });
