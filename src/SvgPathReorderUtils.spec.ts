@@ -14,7 +14,7 @@
 import { expect } from 'chai';
 import 'mocha';
 
-import { Decimal } from '@Exact-Realty/decimal.js-float';
+import { Decimal } from '@exact-realty/decimal.js-float';
 
 import { SvgPath } from './SvgPath';
 import { Strategy, sortPathsByRelativePosition } from './SvgPathReorderUtils';

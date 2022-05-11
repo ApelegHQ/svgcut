@@ -57,7 +57,7 @@ module.exports = (grunt) => {
 
 	grunt.loadNpmTasks('grunt-jison');
 	grunt.loadNpmTasks('grunt-browserify');
-	grunt.loadNpmTasks('grunt-exorcise');
+	grunt.loadNpmTasks('@exact-realty/grunt-exorcise');
 
 	grunt.registerTask('default', [
 		'jison',

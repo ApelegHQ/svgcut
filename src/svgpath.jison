@@ -14,7 +14,7 @@
 %options flex
 
 %{
-	const Decimal = require('@Exact-Realty/decimal.js-float');
+	const Decimal = require('@exact-realty/decimal.js-float');
 %}
 
 /* lexical grammar */

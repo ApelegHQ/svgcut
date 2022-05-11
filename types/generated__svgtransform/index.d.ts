@@ -12,7 +12,7 @@
  */
 
 declare module '@generated/svgtransform' {
-	import { Decimal } from '@Exact-Realty/decimal.js-float';
+	import { Decimal } from '@exact-realty/decimal.js-float';
 
 	export type SvgTransformMatrix = [
 		Decimal,

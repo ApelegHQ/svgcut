@@ -11,7 +11,7 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-import { Decimal } from '@Exact-Realty/decimal.js-float';
+import { Decimal } from '@exact-realty/decimal.js-float';
 import { Parser } from 'xml2js';
 
 import { SvgPath } from './SvgPath';
